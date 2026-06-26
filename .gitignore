@@ -1,0 +1,22 @@
+# 依赖
+node_modules/
+
+# 开发工具配置（本地用，非项目本身）
+.mcp.json
+
+# 临时/验证产物
+shots/
+_lay/
+*.log
+
+# 内部会话交接文档（含 AI 协作细节，非公开内容；公开开发者文档见 docs/DEVELOPMENT.md）
+docs/HANDOFF.md
+
+# 临时验证脚本
+_*.js
+
+# 操作系统 / 编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

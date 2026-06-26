@@ -1,0 +1,37 @@
+MIT License
+
+Copyright (c) 2026 czl
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+NOTE ON CONTENT LICENSE:
+
+The MIT license above applies to the source code (math-atlas.html and related
+scripts). The knowledge CONTENT contained in this project — including but not
+limited to knowledge-point definitions, textbook/resource lists, learning-path
+designs, and node descriptions — is licensed under a separate Creative Commons
+Attribution-ShareAlike 4.0 International License (CC-BY-SA 4.0):
+
+    https://creativecommons.org/licenses/by-sa/4.0/
+
+You are free to share and adapt the content for any purpose, even commercially,
+provided you (1) give appropriate credit, (2) indicate if changes were made,
+and (3) distribute derivative works under the same CC-BY-SA 4.0 license.
