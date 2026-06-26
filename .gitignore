@@ -14,6 +14,7 @@ docs/HANDOFF.md
 
 # 临时验证脚本
 _*.js
+_commit_payload.json
 
 # 操作系统 / 编辑器
 .DS_Store
