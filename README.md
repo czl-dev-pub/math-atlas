@@ -40,7 +40,12 @@
 
 ## 贡献
 
-发现错误或有建议？欢迎提 [Issue](../../issues)。请按对应模板填写——**事实性纠错请附可核对的来源链接**（教材 ISBN、维基、出版社页面等），这样我们能快速核对采纳。
+发现错误或有建议？欢迎提 Issue——**事实性纠错请附可核对的来源链接**（教材 ISBN、维基、出版社页面等），这样我们能快速核对采纳。
+
+本项目同时托管在两个平台，任一平台都可提建议：
+
+- **GitLab**：https://gitlab.redcoast.dpdns.org/learning/math-atlas/-/issues
+- **GitHub**：https://github.com/czl-dev-pub/math-atlas/issues
 
 详见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。
 

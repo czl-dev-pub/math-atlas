@@ -4,14 +4,19 @@
 
 ## 怎么提建议
 
-统一通过 [GitHub Issues](../../issues) 提交，并**选择对应的模板**填写：
+本项目同时托管在 GitLab 和 GitHub，任一平台都可提 Issue。请**选择对应的模板**填写：
+
+- **GitLab**：https://gitlab.redcoast.dpdns.org/learning/math-atlas/-/issues
+- **GitHub**：https://github.com/czl-dev-pub/math-atlas/issues
 
 | 类型 | 模板 | 适合 |
 |---|---|---|
-| 🐛 知识点 / 事实纠错 | `content-correction.md` | 定义写错、教材作者/版次有误、前置依赖关系不对、MSC 编码错误 |
-| 📚 教材 / 资源推荐 | `resource-suggestion.md` | 推荐更好的教材、补充某节点的学习资源 |
-| 💡 功能建议 | `feature-request.md` | 新交互、新功能、可视化改进 |
-| 🎯 体验问题 | `ux-issue.md` | 操作不顺手、看不懂、显示异常 |
+| 🐛 知识点 / 事实纠错 | 知识点 / 事实纠错 | 定义写错、教材作者/版次有误、前置依赖关系不对、MSC 编码错误 |
+| 📚 教材 / 资源推荐 | 教材 / 资源推荐 | 推荐更好的教材、补充某节点的学习资源 |
+| 💡 功能建议 | 功能建议 | 新交互、新功能、可视化改进 |
+| 🎯 体验问题 | 体验问题 | 操作不顺手、看不懂、显示异常 |
+
+（两平台的模板内容一致：GitLab 用 `.gitlab/issue_templates/`，GitHub 用 `.github/ISSUE_TEMPLATE/`。）
 
 **请尽量用模板的结构化字段填写**，而不是写成一段散文——这能让我们在几分钟内核对并回应。
 
@@ -34,14 +39,14 @@
 
 ## 处理流程
 
-1. 你提 Issue（用模板）。
+1. 你提 Issue（用模板，GitLab 或 GitHub 任一）。
 2. 我们核对来源 / 复现问题。
-3. 通过 `Pull Request` 提交修改，PR 描述里写清"改了什么、依据什么"。
+3. 通过 **Merge Request**（GitLab）/ **Pull Request**（GitHub）提交修改，描述里写清"改了什么、依据什么"。
 4. 合并到主分支，Issue 关闭。
 
 > 即便你不写代码，只提 Issue 也非常有价值——核对与实现由维护者完成。
 
-## 直接提 Pull Request
+## 直接提 Merge Request / Pull Request
 
 如果你希望自己改代码：
 
