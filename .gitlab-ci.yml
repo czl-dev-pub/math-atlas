@@ -1,15 +1,24 @@
 # GitLab CI for math-atlas
-# 包含两个代码检查 job：
-#   1. data-validate —— 数据完整性校验（核心：校验 86 节点字段/悬空引用/items 对象化）
-#   2. sonarqube-check —— SonarQube 静态分析（需在 CI/CD 变量里配 SONAR_HOST_URL / SONAR_TOKEN）
+# 代码检查：数据完整性校验（核心闸）+ SonarQube 静态分析（报告型，不阻断）。
 #
-# 前置条件：项目需要有可用的 GitLab Runner（Shared Runner 或 Specific Runner）。
-# 若 pipeline 处于 stuck 状态，说明没有 runner，需先注册一个。
+# 设计原则：
+#   - 两条路径（push / MR）都正确检查 + 正确反馈，全程不阻断（allow_failure: true）。
+#   - push：增量分析（SonarQube 自动算 New Code），失败时脚本把 Quality Gate 原因写回 commit。
+#   - MR：增量分析 + MR 评论装饰（Community Branch Plugin 原生支持）。
+#   - 推送者/评审者无需翻 job 日志或 dashboard，结果自动出现在 GitLab 页面。
+#
+# 需配置 CI/CD 变量（Settings → CI/CD → Variables）：
+#   SONAR_HOST_URL     = https://sonarqube.redcoast.dpdns.org
+#   SONAR_TOKEN        = （SonarQube 扫描 token）
+#   GITLAB_WRITE_TOKEN = （有 api scope 的 GitLab token，用于写回 commit/MR note）
+#   SONAR_PROJECT_KEY  = math-atlas（默认 CI_PROJECT_NAME，如项目在 SonarQube 用别的 key 则覆盖）
 
 stages:
   - check
 
-# 数据完整性校验 —— 不依赖任何外部服务，最关键的一道闸
+# ────────────────────────────────────────────────────────────────
+# 数据完整性校验 —— 核心闸，不依赖任何外部服务
+# ────────────────────────────────────────────────────────────────
 data-validate:
   stage: check
   image: node:20-alpine
@@ -17,28 +26,56 @@ data-validate:
     - node tools/validate.js
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-# SonarQube 静态分析
-# 需配置 CI/CD 变量：SONAR_HOST_URL、SONAR_TOKEN（见 CONTRIBUTING / 维护说明）
-sonarqube-check:
+# ────────────────────────────────────────────────────────────────
+# SonarQube 静态分析（报告型，allow_failure 永远为 true）
+# 区分 push / MR 上下文，传不同参数：
+#   - MR：触发 Community Branch Plugin 的 MR 评论装饰
+#   - push：传分支名，触发分支分析（增量 New Code）
+# 末尾无论成败都跑 tools/sonar-report.sh，把结果写回 GitLab。
+# ────────────────────────────────────────────────────────────────
+.sonar_base: &sonar_base
   stage: check
   image:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [""]
+  allow_failure: true
   variables:
-    # 排除内联的第三方库噪音（Cytoscape.js 内联在 math-atlas.html，占文件绝大部分）
-    # 单文件 HTML 项目，SonarQube 主要扫描 <script> 里的应用 JS
     SONAR_EXCLUSIONS: "**/node_modules/**,**/*.min.js"
+
+# push 到默认分支：分支分析 + commit note 反馈
+sonarqube-push:
+  <<: *sonar_base
   script:
     - sonar-scanner
-        -Dsonar.projectKey=${CI_PROJECT_NAME}
+        -Dsonar.projectKey=${SONAR_PROJECT_KEY:-$CI_PROJECT_NAME}
         -Dsonar.sources=.
         -Dsonar.host.url=${SONAR_HOST_URL}
         -Dsonar.token=${SONAR_TOKEN}
         -Dsonar.exclusions=${SONAR_EXCLUSIONS}
         -Dsonar.html.exclusions=**/*.html
-  allow_failure: true
+        -Dsonar.branch.name=${CI_COMMIT_BRANCH}
+        -Dsonar.qualitygate.wait=true || true
+    - sh tools/sonar-report.sh
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# MR：MR 评论装饰 + MR note 反馈
+sonarqube-mr:
+  <<: *sonar_base
+  script:
+    - sonar-scanner
+        -Dsonar.projectKey=${SONAR_PROJECT_KEY:-$CI_PROJECT_NAME}
+        -Dsonar.sources=.
+        -Dsonar.host.url=${SONAR_HOST_URL}
+        -Dsonar.token=${SONAR_TOKEN}
+        -Dsonar.exclusions=${SONAR_EXCLUSIONS}
+        -Dsonar.html.exclusions=**/*.html
+        -Dsonar.pullrequest.key=${CI_MERGE_REQUEST_IID}
+        -Dsonar.pullrequest.branch=${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}
+        -Dsonar.pullrequest.base=${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}
+        -Dsonar.qualitygate.wait=true || true
+    - sh tools/sonar-report.sh
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
