@@ -80,9 +80,15 @@ calculus2: {
 
 **预览**：浏览器直接打开 `math-atlas.html`。改完数据刷新即可看效果。
 
-**数据校验**：用 Node 解析 `NODES` 块，检查字段完整性、prereq 悬空引用、qa 合法性等。校验脚本不在仓库内（按需临时写），核心思路：用正则提取 `const NODES = {...};` 块，`eval` 后遍历检查。
+**数据校验**：改完数据后跑校验脚本，检查字段完整性、prereq 悬空引用、qa 合法性、items 是否全部对象化：
 
-**真实浏览器验证（重要）**：改动**不能只看代码/数据**，必须用浏览器实际打开确认渲染。本项目历史上多次出现"数据正确但渲染/交互异常"的情况。
+```bash
+node tools/validate.js
+```
+
+校验 86 节点、1117 个知识点，0 错误 0 警告为通过。这个脚本用 Node 的 vm 整体解析 NODES 块（不用脆弱的正则切分），CI（`.gitlab-ci.yml` 的 `data-validate` job）也会自动跑。**每次改数据后都应先跑它确认无误再提交。**
+
+**真实浏览器验证（重要）**：数据校验只保证数据结构正确，**渲染/交互必须用浏览器实际打开确认**。本项目历史上多次出现"数据正确但渲染/交互异常"的情况。校验脚本通过 ≠ 页面渲染正确。
 
 如需自动化截图验证，可用 CDP（Chrome DevTools Protocol）+ headless Edge：
 1. PowerShell 启动：`msedge.exe --headless=new --remote-debugging-port=9333`
