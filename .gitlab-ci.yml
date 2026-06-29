@@ -1,0 +1,44 @@
+# GitLab CI for math-atlas
+# 包含两个代码检查 job：
+#   1. data-validate —— 数据完整性校验（核心：校验 86 节点字段/悬空引用/items 对象化）
+#   2. sonarqube-check —— SonarQube 静态分析（需在 CI/CD 变量里配 SONAR_HOST_URL / SONAR_TOKEN）
+#
+# 前置条件：项目需要有可用的 GitLab Runner（Shared Runner 或 Specific Runner）。
+# 若 pipeline 处于 stuck 状态，说明没有 runner，需先注册一个。
+
+stages:
+  - check
+
+# 数据完整性校验 —— 不依赖任何外部服务，最关键的一道闸
+data-validate:
+  stage: check
+  image: node:20-alpine
+  script:
+    - node tools/validate.js
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
+
+# SonarQube 静态分析
+# 需配置 CI/CD 变量：SONAR_HOST_URL、SONAR_TOKEN（见 CONTRIBUTING / 维护说明）
+sonarqube-check:
+  stage: check
+  image:
+    name: sonarsource/sonar-scanner-cli:latest
+    entrypoint: [""]
+  variables:
+    # 排除内联的第三方库噪音（Cytoscape.js 内联在 math-atlas.html，占文件绝大部分）
+    # 单文件 HTML 项目，SonarQube 主要扫描 <script> 里的应用 JS
+    SONAR_EXCLUSIONS: "**/node_modules/**,**/*.min.js"
+  script:
+    - sonar-scanner
+        -Dsonar.projectKey=${CI_PROJECT_NAME}
+        -Dsonar.sources=.
+        -Dsonar.host.url=${SONAR_HOST_URL}
+        -Dsonar.token=${SONAR_TOKEN}
+        -Dsonar.exclusions=${SONAR_EXCLUSIONS}
+        -Dsonar.html.exclusions=**/*.html
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "master"
