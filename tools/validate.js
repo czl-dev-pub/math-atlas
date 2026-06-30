@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * math-atlas 数据完整性校验脚本
- * 用法: node tools/validate.js
+ * v1.1 — 用法: node tools/validate.js
  *
  * 校验 NODES 数据：
  *  - 每个 node 必填字段完整 (layer/name/def/prereq/msc/items/items_src/res/qa)
@@ -33,6 +33,17 @@ if (start < 0 || end < 0) {
 
 const block = lines.slice(start, end + 1).join('\n').replace(/^const NODES\s*=\s*/, '').replace(/;\s*$/, '');
 
+// 重复 key 检测：扫源文本统计顶层 key 出现次数。
+// JS 对象字面量重复 key 不报错而是后者覆盖前者（anageom bug 就是这么潜伏的），
+// eval 后无法察觉，必须扫源文本。匹配 "  keyname: {layer:" 这种节点定义行。
+const keyCounts = {};
+const keyRe = /^  ([a-zA-Z_0-9]+):\s*\{layer:/gm;
+let _km;
+while ((_km = keyRe.exec(block)) !== null) {
+  keyCounts[_km[1]] = (keyCounts[_km[1]] || 0) + 1;
+}
+const dupKeys = Object.keys(keyCounts).filter(k => keyCounts[k] > 1);
+
 const VALID_LAYERS = new Set(['found', 'analysis', 'algebra', 'geom', 'prob', 'disc', 'app']);
 const VALID_QA = new Set(['A', 'B', 'C', 'D']);
 const REQUIRED = ['layer', 'name', 'def', 'prereq', 'msc', 'items', 'items_src', 'res', 'qa'];
@@ -62,6 +73,11 @@ try {
     }
   }
   if (nodeCount < 80) warnings.push(`只解析到 ${nodeCount} 个节点（预期 86），NODES 块可能有语法错误。`);
+}
+
+// 重复 key 报告（无论解析是否成功都要查——这是源文本层面的问题，eval 不可见）
+for (const k of dupKeys) {
+  errors.push(`【重复 key】'${k}' 在 NODES 中定义了 ${keyCounts[k]} 次（JS 后者覆盖前者，前面的节点会运行时丢失）`);
 }
 
 // 字段完整性 + 值合法性（仅当解析成功时）
@@ -117,7 +133,7 @@ for (const id of Object.keys(nodes)) {
 console.log('════════════════════════════════════════');
 console.log(' math-atlas 数据校验');
 console.log('════════════════════════════════════════');
-console.log(`节点数: ${nodeCount}`);
+console.log(`节点数: ${nodeCount}${dupKeys.length ? ` (⚠️ 源文本定义了 ${Object.values(keyCounts).reduce((a,b)=>a+b,0)} 个，含 ${dupKeys.length} 个重复 key)` : ''}`);
 console.log(`知识点总数: ${totalItems}`);
 console.log(`各层: ${Object.entries(byLayer).map(([k, v]) => `${k}=${v}`).join('  ')}`);
 console.log(`错误: ${errors.length}`);
