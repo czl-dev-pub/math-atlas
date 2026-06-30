@@ -16,6 +16,10 @@ docs/HANDOFF.md
 _*.js
 _commit_payload.json
 
+# 其他会话/工具残留（与本项目无关）
+ssh_check*.js
+.sanitizer-rules.json
+
 # 操作系统 / 编辑器
 .DS_Store
 Thumbs.db
