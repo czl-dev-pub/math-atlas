@@ -168,6 +168,7 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
       <button class="tab active" data-mode="atlas" onclick="setMode('atlas')">🗺️ 全景图</button>
       <button class="tab" data-mode="goal" onclick="setMode('goal')">🎯 目标路线</button>
       <button class="tab" data-mode="search" onclick="setMode('search')">🔍 搜索</button>
+      <button class="tab" onclick="openDiagnostic()" title="不知道从哪学？先做诊断" style="background:var(--accent);color:#0f172a;border-color:var(--accent);font-weight:600">📋 诊断</button>
     </div>
     <div class="progress-wrap" title="已掌握的节点数">
       <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
@@ -212,6 +213,53 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
   </div>
   <div class="dbody" id="d-body"></div>
 </div>
+
+<!-- 诊断问卷模态框 -->
+<div id="diag-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center">
+  <div style="background:var(--panel);border:1px solid var(--panel2);border-radius:12px;width:560px;max-width:92vw;max-height:88vh;overflow-y:auto;padding:28px 32px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+      <h2 style="font-size:20px;font-weight:600">📋 学习诊断</h2>
+      <button onclick="closeDiagnostic()" style="margin-left:auto;background:var(--panel2);border:none;color:var(--txt);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px">✕</button>
+    </div>
+    <p style="color:var(--txt-dim);font-size:13px;line-height:1.6;margin-bottom:20px">不知道从哪学起？回答几个问题，我会自动标记你已掌握的基础，并推荐最佳起点。<b>勾选即记录，不会丢</b>。</p>
+
+    <!-- Q1: 数学背景 -->
+    <div style="margin-bottom:18px">
+      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">① 你的数学背景？</h3>
+      <div id="diag-bg" style="display:flex;flex-wrap:wrap;gap:8px">
+        <button class="diag-chip" data-bg="middle" onclick="diagPickBg('middle')">初中水平</button>
+        <button class="diag-chip" data-bg="high" onclick="diagPickBg('high')">高中学过</button>
+        <button class="diag-chip" data-bg="eng" onclick="diagPickBg('eng')">大学工科</button>
+        <button class="diag-chip" data-bg="sci" onclick="diagPickBg('sci')">大学理科</button>
+        <button class="diag-chip" data-bg="math" onclick="diagPickBg('math')">数学专业</button>
+      </div>
+    </div>
+
+    <!-- Q2: 学习目标 -->
+    <div style="margin-bottom:18px">
+      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">② 你的学习目标？（可选，用于推荐路线）</h3>
+      <div id="diag-goal" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+
+    <!-- Q3: 自评已掌握 -->
+    <div style="margin-bottom:18px">
+      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">③ 勾选你学过/掌握的基础知识</h3>
+      <div id="diag-skills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      <p style="font-size:11px;color:var(--txt-dim);margin-top:6px">勾选会同步到"已掌握"进度。不勾不勉强——后续学了再点节点标记也行。</p>
+    </div>
+
+    <button onclick="diagGenerate()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#0f172a;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px">生成诊断报告 →</button>
+    <div id="diag-result" style="margin-top:18px;display:none"></div>
+  </div>
+</div>
+<style>
+.diag-chip{background:var(--panel2);border:1px solid var(--panel2);color:var(--txt);padding:7px 14px;border-radius:18px;font-size:13px;cursor:pointer;transition:all .15s}
+.diag-chip:hover{border-color:var(--accent)}
+.diag-chip.active{background:var(--accent);color:#0f172a;border-color:var(--accent);font-weight:600}
+.diag-skill{background:var(--panel2);border:1px solid var(--panel2);color:var(--txt);padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;user-select:none;transition:all .15s}
+.diag-skill:hover{border-color:var(--accent)}
+.diag-skill.active{background:rgba(34,197,94,.18);border-color:#22c55e;color:#86efac}
+</style>
 <script>
 /* ========== 数据层：NODES / PATHS ========== */
 const LAYERS = {
@@ -2933,6 +2981,102 @@ function safeInit(){
 }
 window.addEventListener('DOMContentLoaded', safeInit);
 if(document.readyState!=='loading') safeInit();
+
+/* ========== 开机诊断问卷 + 摸底报告 ========== */
+// 诊断用数据：基础层节点 id → 简化技能名（用于问卷勾选）
+const DIAG_SKILLS = [
+  {id:'number',   label:'数与代数（正负数/有理数/实数/整式/分式）'},
+  {id:'function', label:'函数与图像（一次/二次/指数/对数函数）'},
+  {id:'equation', label:'方程与不等式（一元二次/方程组）'},
+  {id:'trig',     label:'三角学（三角函数/恒等式/解三角形）'},
+  {id:'sequence', label:'数列（等差/等比/通项/求和）'},
+  {id:'vector',   label:'向量（平面向量/坐标运算）'},
+  {id:'coords',   label:'坐标与解析几何（直线/圆/圆锥曲线）'},
+  {id:'geom_basic',label:'平面几何（三角形/圆/相似/全等）'},
+  {id:'solidgeom',label:'立体几何（空间几何体/三视图）'},
+  {id:'prob_basic',label:'概率统计初步（古典概型/统计图表）'},
+  {id:'derivative',label:'导数初步（变化率/极值/最值）'},
+  {id:'complex_num',label:'复数初步'},
+  {id:'proof',    label:'证明方法（归纳/演绎/反证）'},
+  {id:'logic',    label:'数理逻辑基础'},
+  {id:'settheory',label:'集合论基础'},
+];
+let diagBg=null, diagGoal=null;
+
+function openDiagnostic(){
+  document.getElementById('diag-modal').style.display='flex';
+  document.getElementById('diag-result').style.display='none';
+  // 渲染目标选项（从 PATHS 取）
+  const goalDiv=document.getElementById('diag-goal');
+  goalDiv.innerHTML='<button class="diag-chip" data-goal="" onclick="diagPickGoal(this)">暂无明确目标</button>'+
+    Object.entries(PATHS).slice(0,12).map(([k,p])=>'<button class="diag-chip" data-goal="'+k+'" onclick="diagPickGoal(this)">'+p.name+'</button>').join('');
+  // 渲染技能勾选
+  document.getElementById('diag-skills').innerHTML=DIAG_SKILLS.map(s=>
+    '<span class="diag-skill'+(mastered.has(s.id)?' active':'')+'" data-skill="'+s.id+'" onclick="this.classList.toggle(\'active\')">'+s.label+'</span>'
+  ).join('');
+}
+function closeDiagnostic(){ document.getElementById('diag-modal').style.display='none'; }
+function diagPickBg(bg){
+  diagBg=bg;
+  document.querySelectorAll('#diag-bg .diag-chip').forEach(b=>b.classList.toggle('active',b.dataset.bg===bg));
+}
+function diagPickGoal(btn){
+  diagGoal=btn.dataset.goal||null;
+  document.querySelectorAll('#diag-goal .diag-chip').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function diagGenerate(){
+  // 1. 收集勾选的技能 → 标记 mastered
+  let newlyMarked=[];
+  document.querySelectorAll('#diag-skills .diag-skill.active').forEach(el=>{
+    const id=el.dataset.skill;
+    if(!mastered.has(id)){ mastered.add(id); saveMastered(); newlyMarked.push(id); }
+  });
+  // 2. 推荐起点：第一个未掌握、但前置（prereq）都已掌握的节点
+  let recommendation=null, blockedBy=null;
+  for(const id in NODES){
+    if(mastered.has(id)) continue;
+    const prereqs=NODES[id].prereq||[];
+    if(prereqs.length===0){ recommendation=id; break; } // 无前置的直接推荐
+    if(prereqs.every(p=>mastered.has(p))){ recommendation=id; break; }
+  }
+  // 若没找到全前置满足的，找阻塞最少的
+  if(!recommendation){
+    let minBlock=999;
+    for(const id in NODES){
+      if(mastered.has(id)) continue;
+      const missing=(NODES[id].prereq||[]).filter(p=>!mastered.has(p)).length;
+      if(missing<minBlock && missing>0){ minBlock=missing; recommendation=id; blockedBy=(NODES[id].prereq||[]).filter(p=>!mastered.has(p)); }
+    }
+  }
+  // 3. 生成报告
+  const masteredCount=mastered.size;
+  const totalNodes=Object.keys(NODES).length;
+  const masteryPct=Math.round(masteredCount/totalNodes*100);
+  let html='<div style="background:#0f172a;border-radius:8px;padding:16px;font-size:13px;line-height:1.8">';
+  html+='<div style="color:var(--accent);font-weight:600;margin-bottom:8px">📊 你的诊断报告</div>';
+  if(newlyMarked.length){ html+='<p>✅ 已标记 <b>'+newlyMarked.length+'</b> 个新掌握的知识：'+newlyMarked.map(id=>NODES[id].name).join('、')+'</p>'; }
+  html+='<p>📈 当前掌握：<b>'+masteredCount+' / '+totalNodes+'</b> 节点（'+masteryPct+'%）</p>';
+  if(recommendation){
+    html+='<p>🎯 <b>建议下一步</b>：学习 <a onclick="closeDiagnostic();focusNode(\''+recommendation+'\')" style="color:var(--accent);cursor:pointer;text-decoration:underline">'+NODES[recommendation].name+'</a>';
+    if(blockedBy){ html+='<br><span style="color:var(--txt-dim)">（需先补：'+blockedBy.map(id=>NODES[id].name).join('、')+'）</span>'; }
+    html+='</p>';
+  }
+  if(diagGoal && PATHS[diagGoal]){
+    html+='<p>🛤️ 目标 <b>'+PATHS[diagGoal].name+'</b> 的路线：';
+    const steps=PATHS[diagGoal].steps;
+    const startStep=steps.find(s=>!mastered.has(s.id))||steps[0];
+    html+='<a onclick="closeDiagnostic();currentPath=\''+diagGoal+'\';focusNode(\''+startStep.id+'\')" style="color:var(--accent);cursor:pointer;text-decoration:underline">从 '+NODES[startStep.id].name+' 开始</a>';
+    html+='</p>';
+  }
+  html+='<p style="margin-top:12px"><button onclick="exportProgress()" style="background:var(--panel2);border:1px solid var(--accent);color:var(--accent);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px">⬇ 下载报告（含进度备份）</button></p>';
+  html+='</div>';
+  const r=document.getElementById('diag-result');
+  r.innerHTML=html; r.style.display='block';
+  // 刷新图谱（更新掌握状态着色）
+  updateProgress();
+}
 </script>
 </body>
 </html>
