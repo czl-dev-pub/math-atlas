@@ -271,6 +271,8 @@ const LAYERS = {
   disc:    {name:'离散数学',   color:'#d97706'},
   app:     {name:'应用与计算', color:'#0891b2'},
 };
+// 各层图标（节点名前缀，提升视觉辨识度）
+const LAYER_ICON = {found:'📐', analysis:'∑', algebra:'𝑥', geom:'△', prob:'🎲', disc:'◊', app:'⚙'};
 
 /* 节点字段说明:
    id: 唯一标识
@@ -2456,7 +2458,7 @@ function goalsUsing(id){
 
 function buildElements(){
   const nodes = Object.entries(NODES).map(([id,n])=>({
-    data:{id, label:n.name, layer:n.layer, color:layerColor(id), status:nodeStatus(id), qa:n.qa}
+    data:{id, label:(LAYER_ICON[n.layer]||'')+' '+n.name, layer:n.layer, color:layerColor(id), status:nodeStatus(id), qa:n.qa}
   }));
   const edges = [];
   Object.entries(NODES).forEach(([id,n])=>{(n.prereq||[]).forEach(p=>{if(NODES[p]) edges.push({data:{source:p,target:id}});});});
