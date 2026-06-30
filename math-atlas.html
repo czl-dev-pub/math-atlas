@@ -673,7 +673,7 @@ const NODES = {
            {t:'留数在定积分计算中的应用',d:'用留数法计算实轴上的难积分，威力巨大。'},
            {t:'共形映射',d:'保持角度与局部形状的复映射，用于化简边值问题。'}],
     items_src:'余家荣《复变函数》第五版 目录',
-    res:[{t:'余家荣《复变函数》第五版（高教社，ISBN 9787040339536）',k:'书',lang:'中'},{t:'Tristan Needham《Visual Complex Analysis》',k:'书',lang:'英'}],
+    res:[{t:'余家荣《复变函数》第五版（高教社，ISBN 9787040339536）',k:'书',lang:'中'},{t:'Tristan Needham《Visual Complex Analysis》',k:'书',lang:'英'},{t:'Michael Taylor《Introduction to Complex Analysis》(免费PDF)',k:'书',lang:'英',url:'https://mtaylor.web.unc.edu/wp-content/uploads/sites/16915/2018/04/complex.pdf'},{t:'Beck 等《A First Course in Complex Analysis》(免费PDF)',k:'书',lang:'英',url:'http://math.sfsu.edu/beck/papers/complex.pdf'}],
     depth:[{g:'信号/电气',d:'留数、拉氏/傅氏变换的复分析背景。'},
            {g:'其他',d:'了解即可。'}],
     qa:'B'},
@@ -2292,6 +2292,30 @@ const PATHS = {
       {id:'cattheory', depth:'函子、单子（Haskell）。'},
       {id:'settheory', depth:'类型语义。'},
     ]},
+
+  /* --- 补全 leads 占位符对应的目标路径（原为悬空引用，现补为正式路径） --- */
+  code:    {name:'编码理论 / 信息编码', field:'理论计算机科学', summary:'信道编码、数据压缩、检错纠错。通信与存储的数学根基。',
+    steps:[
+      {id:'infotheory', depth:'绝对核心：熵、互信息、信道容量。'},
+      {id:'abstractalg', depth:'有限域上的编码（线性码、循环码）。'},
+      {id:'combo', depth:'码字计数、组合设计。'},
+      {id:'prob', depth:'噪声信道下的差错概率。'},
+    ]},
+
+  quant:   {name:'量化金融', field:'物理与工程', summary:'期权定价、风险管理、量化交易。用随机分析把不确定性定价。',
+    steps:[
+      {id:'stochastic', depth:'核心：布朗运动、随机微分方程。'},
+      {id:'prob', depth:'风险中性测度、鞅。'},
+      {id:'pde', depth:'Black-Scholes 方程。'},
+      {id:'stats', depth:'波动率估计、回归。'},
+    ]},
+
+  analytic_nt:{name:'解析数论', field:'密码学与安全', summary:'用分析方法研究素数分布（黎曼猜想、素数定理）。纯数论的现代前沿。',
+    steps:[
+      {id:'numtheory', depth:'基础：素数、同余、欧拉定理。'},
+      {id:'complex', depth:'核心工具：黎曼 zeta 函数、复积分。'},
+      {id:'stats', depth:'素数分布的统计性质。'},
+    ]},
 };
 </script>
 <script>
@@ -2384,7 +2408,7 @@ function goalsUsing(id){
 
 function buildElements(){
   const nodes = Object.entries(NODES).map(([id,n])=>({
-    data:{id, label:n.name, layer:n.layer, color:layerColor(id), status:nodeStatus(id)}
+    data:{id, label:n.name, layer:n.layer, color:layerColor(id), status:nodeStatus(id), qa:n.qa}
   }));
   const edges = [];
   Object.entries(NODES).forEach(([id,n])=>{(n.prereq||[]).forEach(p=>{if(NODES[p]) edges.push({data:{source:p,target:id}});});});
@@ -2463,6 +2487,8 @@ function initCytoscape(){
       {selector:'.starred', style:{'border-color':'#fbbf24','border-style':'double','border-width':'5px'}},
       // 手动定位（拖动后）
       {selector:'.pinned', style:{}},
+      // 质量等级 A（人教版课标背书）：节点名后加金色 ★ 前缀，一眼区分权威内容（与 starred 的双边框区分）
+      {selector:'node[qa="A"]', style:{'text-background-color':'#3b2f0e','text-background-opacity':0.6,'text-background-padding':'1px'}},
     ],
     layout: LAYOUT_COSE
   });
@@ -2847,7 +2873,7 @@ function showDetail(id, pathId){
     : '<span style="color:var(--txt-dim)">无前置（起点节点）</span>';
   const leadsIds = Object.entries(NODES).filter(([_,m])=>(m.prereq||[]).includes(id)).map(([x])=>x);
   const leadsHtml = leadsIds.length ? leadsIds.map(p=>'<span class="pill" onclick="focusNode(\''+p+'\')">'+NODES[p].name+'</span>').join('') : '<span style="color:var(--txt-dim)">—</span>';
-  const resHtml = (n.res||[]).map(r=>'<div class="res-item"><span class="tag">'+(r.k||'资源')+'·'+(r.lang||'')+'</span>'+r.t+'</div>').join('') || '<span style="color:var(--txt-dim)">见相关节点</span>';
+  const resHtml = (n.res||[]).map(r=>'<div class="res-item"><span class="tag">'+(r.k||'资源')+'·'+(r.lang||'')+'</span>'+(r.url?'<a href="'+r.url+'" target="_blank" rel="noopener" style="color:var(--accent);text-decoration:none">'+r.t+' 🔗</a>':r.t)+'</div>').join('') || '<span style="color:var(--txt-dim)">见相关节点</span>';
   // 知识点：item 兼容字符串（{t:it,d:''}）和对象（{t,d}）。点击：切换勾选+就地展开定义。
   const itemsHtml = (n.items&&n.items.length) ? (function(){
     const doneN = countItemsDone(id);
