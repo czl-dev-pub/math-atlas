@@ -172,7 +172,7 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
     </div>
     <div class="progress-wrap" title="已掌握的节点数">
       <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
-      <span class="progress-label">✓ <span id="progress-count">0 / 80</span></span>
+      <span class="progress-label">✓ <span id="progress-count">0 / 87</span></span>
       <button class="reset-btn" onclick="exportProgress()" title="备份进度（导出文件）">⬇</button>
       <label class="reset-btn" title="恢复进度（导入文件）" style="cursor:pointer;margin:0">⬆<input type="file" id="import-file" accept=".json" style="display:none" onchange="importProgress(event)"></label>
       <button class="reset-btn" onclick="resetAllProgress()" title="清空进度">↺</button>
@@ -3011,6 +3011,11 @@ const DIAG_SKILLS = [
   {id:'proof',    label:'证明方法（归纳/演绎/反证）'},
   {id:'logic',    label:'数理逻辑基础'},
   {id:'settheory',label:'集合论基础'},
+  {id:'ineqsys',label:'不等式与不等式组'},
+  {id:'quad',label:'一元二次函数与方程'},
+  {id:'explog',label:'指数函数与对数函数'},
+  {id:'counting',label:'计数原理（排列组合）'},
+  {id:'setlogic',label:'集合与逻辑用语'},
 ];
 let diagBg=null, diagGoal=null;
 
