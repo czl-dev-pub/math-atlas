@@ -172,7 +172,7 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
     </div>
     <div class="progress-wrap" title="已掌握的节点数">
       <div class="progress-track"><div class="progress-fill" id="progress-bar"></div></div>
-      <span class="progress-label">✓ <span id="progress-count">0 / 87</span></span>
+      <span class="progress-label">✓ <span id="progress-count">0 / 96</span></span>
       <button class="reset-btn" onclick="exportProgress()" title="备份进度（导出文件）">⬇</button>
       <label class="reset-btn" title="恢复进度（导入文件）" style="cursor:pointer;margin:0">⬆<input type="file" id="import-file" accept=".json" style="display:none" onchange="importProgress(event)"></label>
       <button class="reset-btn" onclick="resetAllProgress()" title="清空进度">↺</button>
@@ -2621,7 +2621,7 @@ function toggleItem(nodeId, idx){
   // 更新掌握按钮文字（全勾时变"已掌握"）
   const wasAuto = allItemsDone(nodeId);
   const btn = document.querySelector('.big-btn');
-  if(btn){ btn.classList.toggle('done', wasMastered||wasAuto); btn.textContent = (wasMastered||wasAuto)?'✓ 已掌握（点击取消）':'标记为已掌握'; }
+  if(btn){ btn.classList.toggle('done', mastered.has(nodeId)||wasAuto); btn.textContent = (mastered.has(nodeId)||wasAuto)?'✓ 已掌握（点击取消）':'标记为已掌握'; }
   // 更新标题里的 "X/Y 已掌握" 计数
   const srcEl = document.querySelector('.items-src');
   if(srcEl){ const dn=countItemsDone(nodeId), tot=(NODES[nodeId].items||[]).length; srcEl.textContent = '（'+dn+'/'+tot+' 已掌握'+(NODES[nodeId].items_src?(' · 来源：'+NODES[nodeId].items_src):'')+'）'; }
@@ -2769,6 +2769,7 @@ function toggleLayout(){
   } else {
     cy.layout(LAYOUT_COSE).run();
   }
+  if(focusedNode){ setTimeout(()=>focusNode(focusedNode),500); }
   const btn = document.getElementById('layout-btn');
   if(btn) btn.textContent = currentLayout==='cose'?'📊 分层布局':'🌐 力导向布局';
 }
@@ -2865,7 +2866,7 @@ function getNextChain(id, depth, acc){
 function focusNode(id){
   focusedNode = id; isGlobalView = false;
   saveViewState();  // 持久化：记住用户在看哪个节点
-  cy.elements().removeClass('dim focused prereq-node next-node path-ctx link-edge prereq-edge next-edge');
+  cy.elements().removeClass('dim focused prereq-node next-node path-ctx link-edge prereq-edge next-edge fish-big fish-mid');
   const prereqs = getDirectPrereqs(id);
   let nexts = getDirectNexts(id);
   // 目标上下文：如果当前在某路径上，高亮该节点在路径中的前后
@@ -2937,8 +2938,9 @@ function toggleGlobalView(){
 
 function exitFocus(){
   focusedNode=null; isGlobalView=false;
-  clearViewState();  // 退出聚焦=回全景，清除视图状态
-  cy.elements().removeClass('dim focused prereq-node next-node path-ctx link-edge prereq-edge next-edge');
+  // 不清 currentPath（由 selectPath 管理），只清视图聚焦状态
+  saveViewState();  // 退出聚焦=回全景，清除视图状态
+  cy.elements().removeClass('dim focused prereq-node next-node path-ctx link-edge prereq-edge next-edge fish-big fish-mid');
   document.getElementById('focusbar').classList.remove('show');
   cy.animate({fit:{eles:cy.elements(), padding:30}, duration:400});
 }
@@ -2986,10 +2988,10 @@ function importProgress(ev){
       const data = JSON.parse(e.target.result);
       if(!data || typeof data !== 'object' || !Array.isArray(data.mastered)) throw new Error('文件格式不对');
       if(!confirm('将用备份文件覆盖当前进度，确定？')) { ev.target.value=''; return; }
-      if(Array.isArray(data.mastered)){ mastered = new Set(data.mastered); saveMastered(); }
+      if(Array.isArray(data.mastered)){ mastered = new Set(data.mastered.filter(id=>typeof id==='string'&&id in NODES)); saveMastered(); }
       if(Array.isArray(data.masteredItems)){ masteredItems = new Set(data.masteredItems); saveMasteredItems(); }
       if(Array.isArray(data.autoMasterLock)){ autoMasterLock = new Set(data.autoMasterLock); saveAutoMasterLock(); }
-      if(Array.isArray(data.starred)){ starred = new Set(data.starred); saveStarred(); }
+      if(Array.isArray(data.starred)){ starred = new Set(data.starred.filter(id=>typeof id==='string'&&id in NODES)); saveStarred(); }
       cy.nodes().forEach(n=>{ n.data('status', nodeStatus(n.id())); n.toggleClass('starred', starred.has(n.id())); });
       updateProgress(); renderStarred();
       alert('✅ 进度已恢复：'+mastered.size+' 个节点，'+masteredItems.size+' 个知识点');
@@ -3281,8 +3283,9 @@ function diagGenerate(){
   html+='</div>';
   const r=document.getElementById('diag-result');
   r.innerHTML=html; r.style.display='block';
-  // 刷新图谱（更新掌握状态着色）
+  // 刷新图谱（更新掌握状态着色 + 节点颜色）
   updateProgress();
+  if(typeof cy!=='undefined'&&cy.nodes){cy.nodes().forEach(node=>{ node.data('status', nodeStatus(node.id())); });}
 }
 </script>
 </body>
