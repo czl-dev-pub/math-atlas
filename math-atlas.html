@@ -56,16 +56,17 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%;font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--txt);overflow:hidden}
   #app{display:flex;flex-direction:column;height:100vh}
-  header{background:var(--panel);border-bottom:1px solid var(--panel2);padding:10px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-  header h1{font-size:18px;font-weight:600;white-space:nowrap}
-  header h1 .sub{color:var(--txt-dim);font-weight:400;font-size:13px;margin-left:6px}
-  .tabs{display:flex;gap:4px;margin-left:auto}
-  .tab{background:transparent;border:1px solid var(--panel2);color:var(--txt-dim);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:13px;transition:all .15s}
-  .tab:hover{color:var(--txt);border-color:var(--accent)}
-  .tab.active{background:var(--accent);color:#0f172a;border-color:var(--accent);font-weight:600}
+  header{background:#162032;border-bottom:1px solid #283a55;padding:11px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  header h1{font-size:17px;font-weight:700;white-space:nowrap;letter-spacing:.2px;display:flex;align-items:center;gap:9px}
+  header h1::before{content:'∑';font-size:22px;font-weight:400;color:var(--accent);font-family:Georgia,serif;line-height:1}
+  header h1 .sub{color:var(--txt-dim);font-weight:400;font-size:12px;margin-left:4px}
+  .tabs{display:flex;gap:4px;margin-left:auto;align-items:center}
+  .tab{background:transparent;border:1px solid #2f4361;color:var(--txt-dim);padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px;transition:all .15s}
+  .tab:hover{color:var(--txt);border-color:#4a6488;background:#1a2740}
+  .tab.active{background:var(--accent);color:#0b1220;border-color:var(--accent);font-weight:600}
   main{flex:1;display:flex;overflow:hidden}
   #cy-wrap{flex:1;min-width:0;position:relative}
-  #cy{width:100%;height:100%;background:radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%)}
+  #cy{width:100%;height:100%;background:#0b1220}
   aside{width:280px;flex:0 0 280px;background:var(--panel);border-right:1px solid var(--panel2);overflow-y:auto;display:none;flex-direction:column}
   aside.show{display:flex}
   aside .group{border-bottom:1px solid var(--panel2)}
@@ -98,24 +99,24 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
   #pathbar{background:var(--panel);border-top:1px solid var(--panel2);padding:10px 16px;font-size:13px;display:none;color:var(--txt-dim);line-height:1.5}
   #pathbar.show{display:block}
   #pathbar b{color:var(--accent)}
-  .legend{position:absolute;bottom:12px;left:12px;background:rgba(30,41,59,.92);border:1px solid var(--panel2);border-radius:8px;padding:10px 12px;font-size:12px;display:flex;flex-direction:column;gap:5px;z-index:10}
+  .legend{position:absolute;bottom:14px;left:14px;background:rgba(22,32,50,.92);border:1px solid #283a55;border-radius:10px;padding:11px 13px;font-size:12px;display:flex;flex-direction:column;gap:6px;z-index:10;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   .legend .row{display:flex;align-items:center;gap:8px}
-  .legend .dot{width:12px;height:12px;border-radius:50%}
-  .hint{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:rgba(30,41,59,.92);border:1px solid var(--panel2);border-radius:20px;padding:6px 16px;font-size:12px;color:var(--txt-dim);z-index:10;max-width:80%;text-align:center}
+  .legend .dot{width:11px;height:11px;border-radius:50%}
+  .hint{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(22,32,50,.92);border:1px solid #283a55;border-radius:20px;padding:7px 18px;font-size:12px;color:var(--txt-dim);z-index:10;max-width:80%;text-align:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
   .hint b{color:var(--accent)}
   ::-webkit-scrollbar{width:8px;height:8px}
   ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:var(--panel2);border-radius:4px}
   ::-webkit-scrollbar-thumb:hover{background:#475569}
   /* 进度条 */
-  .progress-wrap{display:flex;align-items:center;gap:8px;margin-left:8px}
-  .progress-track{width:100px;height:8px;background:var(--panel2);border-radius:4px;overflow:hidden}
+  .progress-wrap{display:flex;align-items:center;gap:8px;margin-left:8px;background:#1a2740;border:1px solid #283a55;border-radius:8px;padding:5px 10px}
+  .progress-track{width:90px;height:7px;background:#0b1220;border-radius:4px;overflow:hidden}
   .progress-fill{height:100%;background:linear-gradient(90deg,#22c55e,#86efac);width:0%;transition:width .4s;border-radius:4px}
-  .progress-label{font-size:12px;color:var(--txt-dim);white-space:nowrap}
-  .reset-btn{background:var(--panel2);border:none;color:var(--txt-dim);width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:13px}
-  .reset-btn:hover{background:#f97316;color:#fff}
+  .progress-label{font-size:12px;color:var(--txt-dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+  .reset-btn{background:#243349;border:1px solid #2f4361;color:var(--txt-dim);width:26px;height:26px;border-radius:7px;cursor:pointer;font-size:13px;transition:all .15s;display:inline-flex;align-items:center;justify-content:center}
+  .reset-btn:hover{background:#312e4a;color:#fff;border-color:#6366f1}
   /* focusbar */
-  .focusbar{position:absolute;top:48px;left:50%;transform:translateX(-50%);background:rgba(30,41,59,.95);border:1px solid var(--accent);border-radius:10px;padding:8px 16px;font-size:12px;color:var(--txt);max-width:85%;line-height:1.6;display:none;z-index:11}
+  .focusbar{position:absolute;top:48px;left:50%;transform:translateX(-50%);background:rgba(22,32,50,.96);border:1px solid var(--accent);border-radius:10px;padding:9px 18px;font-size:12px;color:var(--txt);max-width:85%;line-height:1.6;display:none;z-index:11;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 4px 18px rgba(0,0,0,.3)}
   .focusbar.show{display:block}
   .mini-btn{background:var(--panel2);border:1px solid var(--accent);color:var(--accent);padding:3px 10px;border-radius:5px;cursor:pointer;font-size:11px;margin-left:6px}
   .mini-btn:hover{background:var(--accent);color:#0f172a}
@@ -215,53 +216,73 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
 </div>
 
 <!-- 诊断问卷模态框 -->
-<div id="diag-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center">
-  <div style="background:var(--panel);border:1px solid var(--panel2);border-radius:12px;width:680px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:28px 32px">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
-      <h2 style="font-size:20px;font-weight:600">📋 学习诊断</h2>
-      <button onclick="closeDiagnostic()" style="margin-left:auto;background:var(--panel2);border:none;color:var(--txt);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px">✕</button>
-    </div>
-    <p style="color:var(--txt-dim);font-size:13px;line-height:1.6;margin-bottom:20px">不知道从哪学起？回答几个问题，我会自动标记你已掌握的基础，并推荐最佳起点。<b>勾选即记录，不会丢</b>。</p>
-
-    <!-- Q1: 数学背景 -->
-    <div style="margin-bottom:18px">
-      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">① 你的数学背景？<span style="color:var(--txt-dim);font-size:12px;font-weight:400">（选择后会自动预填已掌握的知识）</span></h3>
-      <div id="diag-bg" style="display:flex;flex-wrap:wrap;gap:8px">
-        <button class="diag-chip" data-bg="middle" onclick="diagPickBg('middle')">初中水平</button>
-        <button class="diag-chip" data-bg="high" onclick="diagPickBg('high')">高中学过</button>
-        <button class="diag-chip" data-bg="eng" onclick="diagPickBg('eng')">大学工科</button>
-        <button class="diag-chip" data-bg="sci" onclick="diagPickBg('sci')">大学理科</button>
-        <button class="diag-chip" data-bg="math" onclick="diagPickBg('math')">数学专业</button>
+<div id="diag-modal" style="position:fixed;inset:0;background:rgba(8,12,22,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:100;display:none;align-items:center;justify-content:center">
+  <div style="background:#162032;border:1px solid #2a3a52;box-shadow:0 20px 60px rgba(0,0,0,.5);border-radius:16px;width:720px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:0">
+    <div style="padding:24px 28px 8px;display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#38bdf8,#0ea5e9);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📋</div>
+      <div>
+        <h2 style="font-size:19px;font-weight:600;letter-spacing:.2px">学习诊断</h2>
+        <p style="color:var(--txt-dim);font-size:12px;margin-top:2px">回答三个问题，自动标记基础并推荐起点</p>
       </div>
+      <button onclick="closeDiagnostic()" style="margin-left:auto;background:#243349;border:none;color:var(--txt-dim);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;flex-shrink:0">✕</button>
     </div>
 
-    <!-- Q2: 学习目标 -->
-    <div style="margin-bottom:18px">
-      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">② 你的学习目标？<span style="color:var(--txt-dim);font-size:12px;font-weight:400">（可选，用于推荐路线）</span></h3>
-      <div id="diag-goal" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-    </div>
-
-    <!-- Q3: 自评已掌握 -->
-    <div style="margin-bottom:18px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <h3 style="font-size:14px;color:var(--accent)">③ 勾选你学过/掌握的基础知识</h3>
-        <span style="font-size:11px;color:var(--txt-dim);cursor:pointer" onclick="diagToggleAllSkills()">全选/取消</span>
+    <div style="padding:8px 28px 24px">
+      <!-- Q1: 数学背景 -->
+      <div class="diag-card">
+        <div class="diag-card-h"><span class="diag-num">1</span><span>你的数学背景？</span><span class="diag-card-sub">选后自动预填已掌握知识</span></div>
+        <div id="diag-bg" class="diag-chips">
+          <button class="diag-chip" data-bg="middle" onclick="diagPickBg('middle')">初中水平</button>
+          <button class="diag-chip" data-bg="high" onclick="diagPickBg('high')">高中学过</button>
+          <button class="diag-chip" data-bg="eng" onclick="diagPickBg('eng')">大学工科</button>
+          <button class="diag-chip" data-bg="sci" onclick="diagPickBg('sci')">大学理科</button>
+          <button class="diag-chip" data-bg="math" onclick="diagPickBg('math')">数学专业</button>
+        </div>
       </div>
-      <div id="diag-skills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-      <p style="font-size:11px;color:var(--txt-dim);margin-top:6px">勾选会同步到"已掌握"进度。不勾不勉强——后续学了再点节点标记也行。</p>
-    </div>
 
-    <button onclick="diagGenerate()" style="width:100%;padding:12px;border-radius:8px;border:none;background:var(--accent);color:#0f172a;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px">生成诊断报告 →</button>
-    <div id="diag-result" style="margin-top:18px;display:none"></div>
+      <!-- Q2: 学习目标 -->
+      <div class="diag-card">
+        <div class="diag-card-h"><span class="diag-num">2</span><span>你的学习目标？</span><span class="diag-card-sub">可选，用于推荐路线</span></div>
+        <div id="diag-goal" class="diag-goal-grid"></div>
+      </div>
+
+      <!-- Q3: 自评已掌握 -->
+      <div class="diag-card">
+        <div class="diag-card-h"><span class="diag-num">3</span><span>已掌握的基础知识</span><span class="diag-toggle" onclick="diagToggleAllSkills()">全选/取消</span></div>
+        <div id="diag-skills" class="diag-skills-grid"></div>
+        <p style="font-size:11px;color:var(--txt-dim);margin-top:8px">勾选会同步到"已掌握"进度。不勾不勉强——后续学了再点节点标记也行。</p>
+      </div>
+
+      <button onclick="diagGenerate()" class="diag-go">生成诊断报告 →</button>
+      <div id="diag-result" style="margin-top:16px;display:none"></div>
+    </div>
   </div>
 </div>
 <style>
-.diag-chip{background:var(--panel2);border:1px solid var(--panel2);color:var(--txt);padding:7px 14px;border-radius:18px;font-size:13px;cursor:pointer;transition:all .15s}
-.diag-chip:hover{border-color:var(--accent)}
-.diag-chip.active{background:var(--accent);color:#0f172a;border-color:var(--accent);font-weight:600}
-.diag-skill{background:var(--panel2);border:1px solid var(--panel2);color:var(--txt);padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;user-select:none;transition:all .15s}
+.diag-card{background:#1a2740;border:1px solid #283a55;border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.diag-card-h{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.diag-num{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#0b1220;font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.diag-card-h>span:nth-child(2){font-size:15px;font-weight:600;color:var(--txt)}
+.diag-card-sub{font-size:12px;color:var(--txt-dim);font-weight:400;margin-left:4px}
+.diag-toggle{font-size:12px;color:var(--accent);cursor:pointer;margin-left:auto;font-weight:500}
+.diag-toggle:hover{text-decoration:underline}
+.diag-chips{display:flex;flex-wrap:wrap;gap:8px}
+.diag-chip{background:#243349;border:1px solid #2f4361;color:var(--txt);padding:8px 16px;border-radius:20px;font-size:13px;cursor:pointer;transition:all .15s}
+.diag-chip:hover{border-color:var(--accent);color:#fff}
+.diag-chip.active{background:var(--accent);color:#0b1220;border-color:var(--accent);font-weight:600}
+.diag-goal-grid{display:flex;flex-direction:column;gap:12px}
+.diag-goal-group{}
+.diag-goal-group-title{font-size:11px;color:var(--txt-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:600}
+.diag-goal-items{display:flex;flex-wrap:wrap;gap:6px}
+.diag-goal-item{background:#243349;border:1px solid #2f4361;color:var(--txt);padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;user-select:none;transition:all .15s}
+.diag-goal-item:hover{border-color:var(--accent)}
+.diag-goal-item.active{background:rgba(251,191,36,.18);border-color:#fbbf24;color:#fcd34d}
+.diag-skills-grid{display:flex;flex-wrap:wrap;gap:6px}
+.diag-skill{background:#243349;border:1px solid #2f4361;color:var(--txt);padding:5px 11px;border-radius:6px;font-size:12px;cursor:pointer;user-select:none;transition:all .15s}
 .diag-skill:hover{border-color:var(--accent)}
 .diag-skill.active{background:rgba(34,197,94,.18);border-color:#22c55e;color:#86efac}
+.diag-go{width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--accent),#0ea5e9);color:#0b1220;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;letter-spacing:.3px;transition:filter .15s;box-shadow:0 4px 14px rgba(56,189,248,.25)}
+.diag-go:hover{filter:brightness(1.1)}
 </style>
 <script>
 /* ========== 数据层：NODES / PATHS ========== */
@@ -2714,23 +2735,24 @@ function initCytoscape(){
     container: document.getElementById('cy'),
     elements: buildElements(),
     style: [
-      // 基础节点样式：状态决定外观
-      {selector:'node', style:{'label':'data(label)','text-valign':'center','text-halign':'center','background-color':'data(color)','color':'#fff','font-size':'10px','min-zoomed-font-size':'2px','width':'label','height':'label','padding':'10px','shape':'round-rectangle','text-wrap':'wrap','text-max-width':'90px','border-width':'1px','border-color':'rgba(255,255,255,.15)','opacity':0.25,'transition-property':'opacity, border-color, border-width, font-size, padding','transition-duration':'.25s'}},
-      // 推荐（前置已满足）：亮起
-      {selector:'node[status="recommended"]', style:{'opacity':0.9,'border-color':'#fbbf24','border-width':'2px'}},
-      // 进行中（pending 但有前置未满足）：正常显示但稍暗
-      {selector:'node[status="pending"]', style:{'opacity':0.4}},
-      // 已掌握：绿勾边框 + 高亮
-      {selector:'node[status="mastered"]', style:{'opacity':1,'border-color':'#22c55e','border-width':'3px'}},
+      // 基础节点样式：background-blacken 0.3 = 深邃但保留色彩感；实色亮边框拉开与暗背景的层次（半透明会让边缘发糊）
+      {selector:'node', style:{'label':'data(label)','text-valign':'center','text-halign':'center','background-color':'data(color)','background-blacken':0.3,'color':'#fff','font-size':'11px','min-zoomed-font-size':'2px','width':'label','height':'label','padding':'10px','shape':'round-rectangle','text-wrap':'wrap','text-max-width':'90px','border-width':'1.5px','border-color':'#64748b','opacity':0.55,'transition-property':'opacity, border-color, border-width, font-size, padding, background-blacken','transition-duration':'.25s'}},
+      // 推荐（前置已满足）：亮起 —— 用字重和亮色边框区分，不再抬升整块亮度
+      {selector:'node[status="recommended"]', style:{'opacity':0.95,'background-blacken':0.15,'border-color':'#fbbf24','border-width':'2px','font-weight':'600'}},
+      // 进行中（pending 但有前置未满足）：稍暗但可见
+      {selector:'node[status="pending"]', style:{'opacity':0.6}},
+      // 已掌握：绿勾边框 + 高亮，blacken 归零让掌握节点发"暖光"
+      {selector:'node[status="mastered"]', style:{'opacity':1,'background-blacken':-0.1,'border-color':'#22c55e','border-width':'3px'}},
       // 交互态
-      // 交互态（前后置用高对比互补色，与层级填充色彻底分离；focused 用白框最突出）
-      {selector:'.focused', style:{'border-color':'#ffffff','border-width':'4px','opacity':1,'font-size':'13px','padding':'14px','z-index':99}},
+      // 聚焦态：负 blacken 让节点真正"发光"（比 mastered 更亮一档），白框最突出
+      {selector:'.focused', style:{'border-color':'#ffffff','border-width':'4px','opacity':1,'background-blacken':-0.2,'font-size':'13px','padding':'14px','z-index':99}},
       {selector:'.prereq-node', style:{'border-color':'#22d3ee','border-width':'2px','opacity':0.95}},
       {selector:'.next-node', style:{'border-color':'#fb923c','border-width':'2px','opacity':0.95}},
       {selector:'.dim', style:{'opacity':.08}},
       {selector:'.path-gap', style:{'border-color':'#f97316','border-width':'4px','opacity':1}},
       {selector:'.path-done', style:{'border-color':'#22c55e','border-width':'3px','opacity':1}},
-      {selector:'edge', style:{'width':1.5,'line-color':'#64748b','target-arrow-color':'#64748b','target-arrow-shape':'triangle','arrow-scale':.8,'curve-style':'bezier','opacity':.4}},
+      // 边：默认低对比融入背景（#3b4858 灰蓝），消除"网状刺眼"。聚焦/路径态才高亮
+      {selector:'edge', style:{'width':1,'line-color':'#3b4858','target-arrow-color':'#3b4858','target-arrow-shape':'triangle','arrow-scale':.7,'curve-style':'bezier','opacity':.3}},
       {selector:'.path-edge', style:{'line-color':'#f97316','target-arrow-color':'#f97316','opacity':.95,'width':3}},
       {selector:'.link-edge', style:{'line-color':'#94a3b8','target-arrow-color':'#94a3b8','opacity':.65,'width':2}},
       // 前置边（指向当前节点）：青；后续边（从当前节点指出）：橙 —— 用连线方向区分前后置，比仅靠节点边框明显得多
@@ -2746,8 +2768,8 @@ function initCytoscape(){
       {selector:'.pinned', style:{}},
       // 质量等级 A（人教版课标背书）：节点名后加金色 ★ 前缀，一眼区分权威内容（与 starred 的双边框区分）
       {selector:'node[qa="A"]', style:{'text-background-color':'#3b2f0e','text-background-opacity':0.6,'text-background-padding':'1px'}},
-      // 目标终点节点（星形金色），与学科节点视觉区分
-      {selector:'node[type="goal"]', style:{'shape':'star','background-color':'#fbbf24','color':'#0f172a','font-size':'11px','min-zoomed-font-size':'2px','font-weight':'600','width':'label','height':'label','padding':'14px','border-width':'2px','border-color':'#f59e0b','opacity':0.55,'text-wrap':'wrap','text-max-width':'80px','z-index':10}},
+      // 目标终点节点（星形金色），与学科节点视觉区分。blacken 给金色深一些的质感，避免刺眼
+      {selector:'node[type="goal"]', style:{'shape':'star','background-color':'#fbbf24','background-blacken':0.25,'color':'#0f172a','font-size':'11px','min-zoomed-font-size':'2px','font-weight':'700','width':'label','height':'label','padding':'14px','border-width':'2px','border-color':'#b45309','opacity':0.6,'text-wrap':'wrap','text-max-width':'80px','z-index':10}},
       {selector:'node[type="goal"].focused', style:{'opacity':1,'border-width':'4px','border-color':'#fff'}},
       {selector:'node[type="goal"].dim', style:{'opacity':.05}},
       {selector:'edge[goalEdge]', style:{'line-color':'#fbbf24','target-arrow-color':'#fbbf24','line-style':'dashed','opacity':.3,'width':1.5}},
@@ -3353,18 +3375,21 @@ function diagToggleAllSkills(){
 function openDiagnostic(){
   document.getElementById('diag-modal').style.display='flex';
   document.getElementById('diag-result').style.display='none';
-  // 渲染目标选项：全部 28 条，按 field 分组
+  // 渲染目标选项：全部 28 条，按 field 分组（新卡片式结构）
   const goalDiv=document.getElementById('diag-goal');
+  const FIELD_LABEL={ '计算机/AI/数据':'💻 计算机 · AI · 数据', '物理与工程':'⚙️ 物理与工程', '密码学与安全':'🔐 密码学与安全', '理论计算机科学':'🎓 理论计算机科学' };
   const byField={};
   Object.entries(PATHS).forEach(([k,p])=>{ (byField[p.field]=byField[p.field]||[]).push([k,p]); });
-  let goalHtml='<div style="width:100%"><label class="diag-chip" style="display:inline-block;margin-bottom:6px"><input type="radio" name="diag-goal-radio" value="" style="display:none" onchange="diagPickGoal(this)" checked>暂无明确目标</label>';
+  let goalHtml='';
+  // "暂无明确目标"作为独立首选项
+  goalHtml += '<label class="diag-goal-item" style="margin-bottom:2px"><input type="radio" name="diag-goal-radio" value="" style="display:none" onchange="diagPickGoal(this)" checked>🤷 暂无明确目标</label>';
   Object.entries(byField).forEach(([field,items])=>{
-    goalHtml += '<div style="width:100%;font-size:11px;color:var(--txt-dim);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px">'+field+'</div>';
+    goalHtml += '<div class="diag-goal-group"><div class="diag-goal-group-title">'+(FIELD_LABEL[field]||field)+'</div><div class="diag-goal-items">';
     items.forEach(([k,p])=>{
-      goalHtml += '<label class="diag-chip" style="display:inline-block"><input type="radio" name="diag-goal-radio" value="'+k+'" style="display:none" onchange="diagPickGoal(this)">'+p.name+'</label>';
+      goalHtml += '<label class="diag-goal-item"><input type="radio" name="diag-goal-radio" value="'+k+'" style="display:none" onchange="diagPickGoal(this)">'+p.name+'</label>';
     });
+    goalHtml += '</div></div>';
   });
-  goalHtml += '</div>';
   goalDiv.innerHTML = goalHtml;
   // 渲染技能勾选
   document.getElementById('diag-skills').innerHTML=DIAG_SKILLS.map(s=>
@@ -3384,7 +3409,7 @@ function diagPickBg(bg){
 function diagPickGoal(radio){
   diagGoal=radio.value||null;
   // radio 用 label.active 标记选中
-  document.querySelectorAll('#diag-goal .diag-chip').forEach(lbl=>lbl.classList.remove('active'));
+  document.querySelectorAll('#diag-goal .diag-goal-item').forEach(lbl=>lbl.classList.remove('active'));
   radio.parentElement.classList.add('active');
 }
 
