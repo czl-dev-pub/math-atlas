@@ -2661,7 +2661,7 @@ function loadAutoMasterLock(){
 function saveAutoMasterLock(){ localStorage.setItem('mathatlas_autolock', JSON.stringify([...autoMasterLock])); }
 // 推荐状态：前置全部已掌握 => 'recommended'；否则 'pending'。不设锁，所有节点可点。
 function nodeStatus(id){
-  if(!NODES[id]) return 'goal';  // 目标终点节点（goal_*）不在 NODES 中
+  if(!NODES[id]) return 'pending';  // 防御性：未知节点按 pending 处理
   if(mastered.has(id)) return 'mastered';
   const pr = NODES[id].prereq||[];
   if(pr.length===0 || pr.every(p=>mastered.has(p))) return 'recommended';
@@ -2676,21 +2676,9 @@ function buildElements(){
   const nodes = Object.entries(NODES).map(([id,n])=>({
     data:{id, label:(LAYER_ICON[n.layer]||'')+' '+n.name, layer:n.layer, type:'subject', color:layerColor(id), status:nodeStatus(id), qa:n.qa}
   }));
-  // 28 个目标作为终点节点（星形金色），连到其路径的最后一个步骤节点
-  const goalNodes = [];
-  const goalEdges = [];
-  Object.entries(PATHS).forEach(([k,p])=>{
-    const gid = 'goal_'+k;
-    const steps = p.steps||[];
-    if(steps.length===0) return;
-    const lastStep = steps[steps.length-1].id;
-    if(!NODES[lastStep]) return;
-    goalNodes.push({data:{id:gid, label:'🎯 '+p.name, type:'goal', color:'#fbbf24', status:'goal', goalKey:k}});
-    goalEdges.push({data:{source:lastStep, target:gid, goalEdge:true}});
-  });
   const edges = [];
   Object.entries(NODES).forEach(([id,n])=>{(n.prereq||[]).forEach(p=>{if(NODES[p]) edges.push({data:{source:p,target:id}});});});
-  return [...nodes, ...goalNodes, ...edges, ...goalEdges];
+  return [...nodes, ...edges];
 }
 
 let cy=null, currentMode='atlas', currentPath=null, focusedNode=null, isGlobalView=false;
@@ -2751,6 +2739,8 @@ function initCytoscape(){
       {selector:'.dim', style:{'opacity':.08}},
       {selector:'.path-gap', style:{'border-color':'#f97316','border-width':'4px','opacity':1}},
       {selector:'.path-done', style:{'border-color':'#22c55e','border-width':'3px','opacity':1}},
+      // 路径终点（最后一步）：金色双线边框 + 描边加粗，表示"学到这里=达成目标"
+      {selector:'.path-end', style:{'border-color':'#fbbf24','border-width':'4px','opacity':1,'font-weight':'700','font-size':'13px','z-index':99}},
       // 边：可见但不抢戏（opacity 0.5 是辅助信息的合理区间；太低会"看不到关系"，太高成刺眼网格）
       {selector:'edge', style:{'width':1.2,'line-color':'#64748b','target-arrow-color':'#64748b','target-arrow-shape':'triangle','arrow-scale':.75,'curve-style':'bezier','opacity':.5}},
       {selector:'.path-edge', style:{'line-color':'#f97316','target-arrow-color':'#f97316','opacity':.95,'width':3}},
@@ -2768,11 +2758,6 @@ function initCytoscape(){
       {selector:'.pinned', style:{}},
       // 质量等级 A（人教版课标背书）：节点名后加金色 ★ 前缀，一眼区分权威内容（与 starred 的双边框区分）
       {selector:'node[qa="A"]', style:{'text-background-color':'#3b2f0e','text-background-opacity':0.6,'text-background-padding':'1px'}},
-      // 目标终点节点（星形金色），与学科节点视觉区分。饱满金色 + 较高 opacity 让目标清晰可辨
-      {selector:'node[type="goal"]', style:{'shape':'star','background-color':'#fbbf24','color':'#0f172a','font-size':'11px','min-zoomed-font-size':'2px','font-weight':'700','width':'label','height':'label','padding':'14px','border-width':'2px','border-color':'#b45309','opacity':0.8,'text-wrap':'wrap','text-max-width':'80px','z-index':10}},
-      {selector:'node[type="goal"].focused', style:{'opacity':1,'border-width':'4px','border-color':'#fff'}},
-      {selector:'node[type="goal"].dim', style:{'opacity':.05}},
-      {selector:'edge[goalEdge]', style:{'line-color':'#fbbf24','target-arrow-color':'#fbbf24','line-style':'dashed','opacity':.3,'width':1.5}},
     ],
     layout: {name:'null'}  // 初始无布局，下面用 layoutLayered 定位
   });
@@ -2815,18 +2800,6 @@ function layoutLayered(){
     });
     maxRow = Math.max(maxRow, layerIdx + rows*0.6);
   });
-  // 目标节点（type=goal）：排在最后一层下方，分多行
-  const goalArr = (byLayer[undefined]||[]).filter(n=>n.data('type')==='goal');
-  if(goalArr.length){
-    const goalPerRow = 10;
-    goalArr.forEach((n,i)=>{
-      const subRow = Math.floor(i / goalPerRow);
-      const subCol = i % goalPerRow;
-      const colsThisRow = Math.min(goalPerRow, goalArr.length - subRow*goalPerRow);
-      const rowW = colsThisRow * colW;
-      n.position({x: -rowW/2 + subCol*colW + colW/2, y: rowH*(LAYER_ORDER.length/2 + 0.5 + subRow*0.6)});
-    });
-  }
   refit(cy_.elements(), FIT_PADDING_OVERVIEW);
 }
 let currentLayout='cose';
@@ -2853,36 +2826,23 @@ function bindInteractions(){
   // 鱼眼：mouseover 放大该节点及直接邻居（聚焦时也保留，方便预览其他节点）
   cy.on('mouseover','node', e=>{
     const id=e.target.id();
-    const isGoal = e.target.data('type')==='goal';
-    if(isGoal){
-      const gk=e.target.data('goalKey');
-      const p=PATHS[gk];
-      document.getElementById('hint').innerHTML='<b>🎯 '+(p?p.name:id)+'</b>：'+(p?p.summary+'（点击查看完整路线）':'目标节点');
-    } else if(NODES[id]){
+    if(NODES[id]){
       document.getElementById('hint').innerHTML='<b>'+e.target.data('label')+'</b>：'+NODES[id].def;
     }
     clearTimeout(fishTimer);
     cy.nodes().removeClass('fish-big fish-mid');
     e.target.addClass('fish-big');
-    if(!isGoal){
-      const pr=getDirectPrereqs(id), nx=getDirectNexts(id);
-      [...pr,...nx].forEach(p=>{ const el=cy.getElementById(p); if(el&&el.length) el.addClass('fish-mid'); });
-    }
+    const pr=getDirectPrereqs(id), nx=getDirectNexts(id);
+    [...pr,...nx].forEach(p=>{ const el=cy.getElementById(p); if(el&&el.length) el.addClass('fish-mid'); });
     lastFishNode=id;
   });
   cy.on('mouseout','node', e=>{
     fishTimer=setTimeout(()=>{ cy.nodes().removeClass('fish-big fish-mid'); }, 200);
   });
-  // 单击：聚焦（目标节点→选中其路径）
+  // 单击：聚焦节点
   cy.on('tap','node', e=>{
     e.preventDefault();
-    const id=e.target.id();
-    if(e.target.data('type')==='goal'){
-      const gk=e.target.data('goalKey');
-      if(PATHS[gk]) selectPath(gk);
-    } else {
-      focusNode(id);
-    }
+    focusNode(e.target.id());
   });
   // 点空白退出聚焦
   cy.on('tap', e=>{ if(e.target===cy && focusedNode){ exitFocus(); } });
@@ -3177,17 +3137,17 @@ function selectPath(pathId, srcEl){
   document.querySelectorAll('#sidebar .item').forEach(el=>el.classList.remove('active'));
   if(srcEl) srcEl.classList.add('active');
   exitFocus();
-  // 路径目标节点 + 桥接节点
+  // 路径步骤节点 + 桥接节点（目标终点不再是独立节点，改为高亮路径的最后一步）
   const stepIds = p.steps.map(s=>s.id);
   const need = new Set(stepIds);          // 目标步骤节点（高亮）
   const bridges = new Set();              // 桥接节点（半透明，"路过"）
   for(let i=0;i<stepIds.length-1;i++){
     bfsBridge(stepIds[i], stepIds[i+1]).forEach(b=>{ if(!need.has(b)) bridges.add(b); });
   }
-  const goalNodeId = 'goal_'+pathId;
+  const lastStepId = stepIds[stepIds.length-1];  // 路径终点=最后一步，给它特殊高亮
   cy.nodes().forEach(n=>{
     const nid=n.id();
-    if(nid===goalNodeId){ n.removeClass('dim'); n.addClass('focused'); return; }  // 目标终点高亮
+    if(nid===lastStepId){ n.removeClass('dim'); n.addClass('path-end'); return; }  // 终点高亮
     if(need.has(nid)){
       n.removeClass('dim');
       if(mastered.has(nid)) n.addClass('path-done'); else n.addClass('path-gap');
@@ -3197,11 +3157,10 @@ function selectPath(pathId, srcEl){
       n.addClass('dim');
     }
   });
-  // 边：步骤节点间的边 + 目标边 = 高亮橙；其余 dim
+  // 边：步骤节点间的边 = 高亮橙；其余 dim
   cy.edges().forEach(e=>{
     const s=e.source().id(), t=e.target().id();
     e.removeClass('path-edge');
-    if(s===goalNodeId || t===goalNodeId){ e.removeClass('dim'); return; }  // 目标边可见
     const sIn = need.has(s)||bridges.has(s), tIn = need.has(t)||bridges.has(t);
     if(sIn && tIn){ e.removeClass('dim'); e.addClass('path-edge'); }
     else { e.addClass('dim'); }
