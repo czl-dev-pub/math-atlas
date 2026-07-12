@@ -216,7 +216,7 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
 
 <!-- 诊断问卷模态框 -->
 <div id="diag-modal" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:100;display:none;align-items:center;justify-content:center">
-  <div style="background:var(--panel);border:1px solid var(--panel2);border-radius:12px;width:560px;max-width:92vw;max-height:88vh;overflow-y:auto;padding:28px 32px">
+  <div style="background:var(--panel);border:1px solid var(--panel2);border-radius:12px;width:680px;max-width:94vw;max-height:88vh;overflow-y:auto;padding:28px 32px">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
       <h2 style="font-size:20px;font-weight:600">📋 学习诊断</h2>
       <button onclick="closeDiagnostic()" style="margin-left:auto;background:var(--panel2);border:none;color:var(--txt);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px">✕</button>
@@ -225,7 +225,7 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
 
     <!-- Q1: 数学背景 -->
     <div style="margin-bottom:18px">
-      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">① 你的数学背景？</h3>
+      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">① 你的数学背景？<span style="color:var(--txt-dim);font-size:12px;font-weight:400">（选择后会自动预填已掌握的知识）</span></h3>
       <div id="diag-bg" style="display:flex;flex-wrap:wrap;gap:8px">
         <button class="diag-chip" data-bg="middle" onclick="diagPickBg('middle')">初中水平</button>
         <button class="diag-chip" data-bg="high" onclick="diagPickBg('high')">高中学过</button>
@@ -237,13 +237,16 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
 
     <!-- Q2: 学习目标 -->
     <div style="margin-bottom:18px">
-      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">② 你的学习目标？（可选，用于推荐路线）</h3>
-      <div id="diag-goal" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">② 你的学习目标？<span style="color:var(--txt-dim);font-size:12px;font-weight:400">（可选，用于推荐路线）</span></h3>
+      <div id="diag-goal" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
 
     <!-- Q3: 自评已掌握 -->
     <div style="margin-bottom:18px">
-      <h3 style="font-size:14px;color:var(--accent);margin-bottom:8px">③ 勾选你学过/掌握的基础知识</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <h3 style="font-size:14px;color:var(--accent)">③ 勾选你学过/掌握的基础知识</h3>
+        <span style="font-size:11px;color:var(--txt-dim);cursor:pointer" onclick="diagToggleAllSkills()">全选/取消</span>
+      </div>
       <div id="diag-skills" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       <p style="font-size:11px;color:var(--txt-dim);margin-top:6px">勾选会同步到"已掌握"进度。不勾不勉强——后续学了再点节点标记也行。</p>
     </div>
@@ -2712,7 +2715,7 @@ function initCytoscape(){
     elements: buildElements(),
     style: [
       // 基础节点样式：状态决定外观
-      {selector:'node', style:{'label':'data(label)','text-valign':'center','text-halign':'center','background-color':'data(color)','color':'#fff','font-size':'10px','min-zoomed-font-size':'7px','width':'label','height':'label','padding':'10px','shape':'round-rectangle','text-wrap':'wrap','text-max-width':'90px','border-width':'1px','border-color':'rgba(255,255,255,.15)','opacity':0.25,'transition-property':'opacity, border-color, border-width, font-size, padding','transition-duration':'.25s'}},
+      {selector:'node', style:{'label':'data(label)','text-valign':'center','text-halign':'center','background-color':'data(color)','color':'#fff','font-size':'10px','min-zoomed-font-size':'2px','width':'label','height':'label','padding':'10px','shape':'round-rectangle','text-wrap':'wrap','text-max-width':'90px','border-width':'1px','border-color':'rgba(255,255,255,.15)','opacity':0.25,'transition-property':'opacity, border-color, border-width, font-size, padding','transition-duration':'.25s'}},
       // 推荐（前置已满足）：亮起
       {selector:'node[status="recommended"]', style:{'opacity':0.9,'border-color':'#fbbf24','border-width':'2px'}},
       // 进行中（pending 但有前置未满足）：正常显示但稍暗
@@ -2744,13 +2747,16 @@ function initCytoscape(){
       // 质量等级 A（人教版课标背书）：节点名后加金色 ★ 前缀，一眼区分权威内容（与 starred 的双边框区分）
       {selector:'node[qa="A"]', style:{'text-background-color':'#3b2f0e','text-background-opacity':0.6,'text-background-padding':'1px'}},
       // 目标终点节点（星形金色），与学科节点视觉区分
-      {selector:'node[type="goal"]', style:{'shape':'star','background-color':'#fbbf24','color':'#0f172a','font-size':'11px','font-weight':'600','width':'label','height':'label','padding':'14px','border-width':'2px','border-color':'#f59e0b','opacity':0.55,'text-wrap':'wrap','text-max-width':'80px','z-index':10}},
+      {selector:'node[type="goal"]', style:{'shape':'star','background-color':'#fbbf24','color':'#0f172a','font-size':'11px','min-zoomed-font-size':'2px','font-weight':'600','width':'label','height':'label','padding':'14px','border-width':'2px','border-color':'#f59e0b','opacity':0.55,'text-wrap':'wrap','text-max-width':'80px','z-index':10}},
       {selector:'node[type="goal"].focused', style:{'opacity':1,'border-width':'4px','border-color':'#fff'}},
       {selector:'node[type="goal"].dim', style:{'opacity':.05}},
       {selector:'edge[goalEdge]', style:{'line-color':'#fbbf24','target-arrow-color':'#fbbf24','line-style':'dashed','opacity':.3,'width':1.5}},
     ],
-    layout: LAYOUT_COSE
+    layout: {name:'null'}  // 初始无布局，下面用 layoutLayered 定位
   });
+  layoutLayered();  // 默认用分层布局（比 COSE 力导向更清晰展示7层结构）
+  currentLayout='layered';
+  const _lb=document.getElementById('layout-btn'); if(_lb) _lb.textContent='🌐 力导向布局';
   bindInteractions();
   updateProgress();
   applyStarredStyles();
@@ -2759,39 +2765,44 @@ function initCytoscape(){
 
 /* 布局定义 */
 const LAYER_ORDER = ['found','analysis','algebra','geom','prob','disc','app'];
-const LAYOUT_COSE = {name:'cose', animate:false, nodeRepulsion:80000, idealEdgeLength:140, nodeOverlap:8, componentSpacing:90, padding:30, randomize:true, gravity:60, numIter:1500, fit:true};
+const LAYOUT_COSE = {name:'cose', animate:false, nodeRepulsion:4500, idealEdgeLength:80, nodeOverlap:12, componentSpacing:60, padding:30, randomize:true, gravity:50, numIter:1200, fit:true};
 function layoutLayered(){
-  // 按 layer 分行：每个 layer 一行，节点在该行内排开
-  // 列间距按该层最长节点标签动态计算，避免长名称溢出列槽重叠
+  // 按 layer 分行：每个 layer 一行（节点多时自动换行），节点在该行内排开
   const cy_ = cy;
   const nodes = cy_.nodes();
   const byLayer = {};
   nodes.forEach(n=>{ const l=n.data('layer'); (byLayer[l]=byLayer[l]||[]).push(n); });
-  const rowH = 180;
+  const rowH = 150;       // 层间距
+  const colW = 145;       // 固定列宽（适中，长标签靠 text-wrap 截断）
+  const maxPerRow = 10;   // 每行最多节点数，超过则换行
   nodes.positions(()=>({x:0,y:0})); // reset
-  LAYER_ORDER.forEach((layer,row)=>{
+  let maxRow = 0;
+  LAYER_ORDER.forEach((layer,layerIdx)=>{
     const arr = byLayer[layer]||[];
-    // 估算该层最长标签宽度：节点名字符数 × ~13px(含图标+padding) + 余量
-    const maxLabelLen = Math.max(...arr.map(n=>{
-      const lbl = n.data('label')||''; // 含图标前缀，取实际显示文字
-      // 中文字符算2宽度，英文算1
-      let w=0; for(let i=0;i<lbl.length;i++){ w += lbl.charCodeAt(i)>127?2:1; }
-      return w;
-    }), 4);
-    const colW = Math.max(160, maxLabelLen * 11 + 50);
-    const totalW = arr.length * colW;
+    if(!arr.length) return;
+    // 该层按 maxPerRow 换行
+    const rows = Math.ceil(arr.length / maxPerRow);
     arr.forEach((n,i)=>{
-      n.position({x: -totalW/2 + i*colW + colW/2, y: -rowH*(LAYER_ORDER.length/2) + row*rowH});
+      const subRow = Math.floor(i / maxPerRow);
+      const subCol = i % maxPerRow;
+      const colsThisRow = Math.min(maxPerRow, arr.length - subRow*maxPerRow);
+      const rowW = colsThisRow * colW;
+      const x = -rowW/2 + subCol*colW + colW/2;
+      const y = -rowH*(LAYER_ORDER.length/2) + (layerIdx + subRow*0.6) * rowH;
+      n.position({x, y});
     });
+    maxRow = Math.max(maxRow, layerIdx + rows*0.6);
   });
-  // 目标节点（type=goal）排在第 8 行（app 层之后）
-  const goalRow = LAYER_ORDER.length;
+  // 目标节点（type=goal）：排在最后一层下方，分多行
   const goalArr = (byLayer[undefined]||[]).filter(n=>n.data('type')==='goal');
   if(goalArr.length){
-    const goalColW = 160;
-    const goalTotalW = goalArr.length * goalColW;
+    const goalPerRow = 10;
     goalArr.forEach((n,i)=>{
-      n.position({x: -goalTotalW/2 + i*goalColW + goalColW/2, y: -rowH*(LAYER_ORDER.length/2) + goalRow*rowH});
+      const subRow = Math.floor(i / goalPerRow);
+      const subCol = i % goalPerRow;
+      const colsThisRow = Math.min(goalPerRow, goalArr.length - subRow*goalPerRow);
+      const rowW = colsThisRow * colW;
+      n.position({x: -rowW/2 + subCol*colW + colW/2, y: rowH*(LAYER_ORDER.length/2 + 0.5 + subRow*0.6)});
     });
   }
   refit(cy_.elements(), FIT_PADDING_OVERVIEW);
@@ -2990,7 +3001,7 @@ function toggleGlobalView(){
       else if((s===focusedNode||allNext.has(s)) && allNext.has(t)) e.addClass('next-edge');
       else e.addClass('link-edge');
     });
-    cy.animate({fit:{eles:cy.elements(), padding:FIT_PADDING_OVERVIEW}, duration:400});
+    refit(cy.elements(), FIT_PADDING_OVERVIEW);
   } else { focusNode(focusedNode); }
 }
 
@@ -3158,19 +3169,19 @@ function selectPath(pathId, srcEl){
     if(need.has(nid)){
       n.removeClass('dim');
       if(mastered.has(nid)) n.addClass('path-done'); else n.addClass('path-gap');
-    } else if(bridges.has(nid)){
+    } else if(bridges.size && bridges.has(nid)){
       n.removeClass('dim'); n.addClass('path-ctx');  // 桥接=品红虚线框
     } else {
       n.addClass('dim');
     }
   });
-  // 边：目标节点间直连=粗橙；桥接路径上的边=细橙；其余 dim
+  // 边：步骤节点间的边 + 目标边 = 高亮橙；其余 dim
   cy.edges().forEach(e=>{
     const s=e.source().id(), t=e.target().id();
     e.removeClass('path-edge');
     if(s===goalNodeId || t===goalNodeId){ e.removeClass('dim'); return; }  // 目标边可见
-    if(need.has(s)&&need.has(t)){ e.removeClass('dim'); e.addClass('path-edge'); }
-    else if((need.has(s)||bridges.has(s)) && (need.has(t)||bridges.has(t))){ e.removeClass('dim'); e.addClass('path-edge'); }  // 桥接边
+    const sIn = need.has(s)||bridges.has(s), tIn = need.has(t)||bridges.has(t);
+    if(sIn && tIn){ e.removeClass('dim'); e.addClass('path-edge'); }
     else { e.addClass('dim'); }
   });
   const visible = cy.nodes().filter(n=> !n.hasClass('dim'));
@@ -3182,7 +3193,7 @@ function selectPath(pathId, srcEl){
     const done = mastered.has(s.id);
     return '<span class="pill'+(done?' done':' gap')+'" onclick="showDetail(\''+s.id+'\',\''+pathId+'\')">'+(done?'✓':(i+1))+'.'+NODES[s.id].name+'</span>';
   }).join('');
-  pb.innerHTML = '<b>🎯 '+p.name+'</b>　'+p.summary+'<br>进度：'+(p.steps.length-gaps.length)+'/'+p.steps.length+'　<span style="color:#f97316">橙色=待学缺口，绿色=已掌握</span>　<span style="color:#e879f9">品红=路过的桥接节点</span><br>'+pills;
+  pb.innerHTML = '<b>🎯 '+p.name+'</b>　'+p.summary+'<br>进度：'+(p.steps.length-gaps.length)+'/'+p.steps.length+'　<span style="color:#f97316">橙色=待学缺口，绿色=已掌握</span>　按建议顺序学习：<br>'+pills;
 }
 
 function renderSearchSidebar(){
@@ -3332,6 +3343,12 @@ const BG_PRESET = {
   math: ['number','function','equation','ineqsys','quad','explog','geom_basic','solidgeom','coords','vector','trig','sequence','counting','setlogic','proof','prob_basic','derivative','complex_num','limit','calculus1','calculus2','linalg','vecspace','prob','stats','series','ode','logic','settheory','abstractalg','topology','realanalysis','complex','funchanalysis'],
 };
 let diagBg=null, diagGoal=null, _diagLastReport=null;
+function diagToggleAllSkills(){
+  const skills = document.querySelectorAll('#diag-skills .diag-skill');
+  if(!skills.length) return;
+  const allActive = [...skills].every(s=>s.classList.contains('active'));
+  skills.forEach(s=>s.classList.toggle('active', !allActive));
+}
 
 function openDiagnostic(){
   document.getElementById('diag-modal').style.display='flex';
