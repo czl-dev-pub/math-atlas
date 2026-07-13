@@ -291,11 +291,9 @@ function initCytoscape(){
 	      {selector:'.fish-mid', style:{'opacity':0.85}},
 	      // 收藏
 	      {selector:'.starred', style:{'border-color':'#fbbf24','border-style':'double','border-width':'4px'}},
-	      // 手动定位
-	      {selector:'.pinned', style:{}},
-	      // 质量等级 A
-	      {selector:'node[qa="A"]', style:{'text-background-color':'rgba(251,191,36,.12)','text-background-opacity':1,'text-background-padding':'2px','text-background-shape':'round-rectangle'}},
-    ],
+		      // 手动定位
+		      {selector:'.pinned', style:{}},
+	    ],
     layout: {name:'null'}  // 初始无布局，下面用 layoutLayered 定位
   });
   layoutLayered();  // 默认用分层布局（比 COSE 力导向更清晰展示7层结构）
