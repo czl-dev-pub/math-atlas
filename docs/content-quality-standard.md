@@ -83,7 +83,7 @@ UI 上节点详情面板显示 qa 等级（如徽章 `A 权威`/`C 待校对`）
 ## 5. 执行方式（用户确认：一次性全做）
 
 ### 5.1 工具链
-- 搜索：searxng（`https://searxng.redcoast.dpdns.org/search?q=...&format=json`），通过 curl + node 解析调用。
+- 搜索：searxng（自建实例），通过 curl + node 解析调用。
 - 网页内容：webReader（读维基/教材页面细核）。
 - 修改：直接 Edit math-atlas.html 的节点数据。
 
