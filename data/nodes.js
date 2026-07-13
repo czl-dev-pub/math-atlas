@@ -1,12 +1,12 @@
 /* ========== 数据层：NODES / PATHS ========== */
 const LAYERS = {
-  found:   {name:'基础层',     color:'#6b7280'},
-  analysis:{name:'分析',       color:'#2563eb'},
-  algebra: {name:'代数',       color:'#dc2626'},
-  geom:    {name:'几何与拓扑', color:'#059669'},
-  prob:    {name:'概率与统计', color:'#7c3aed'},
-  disc:    {name:'离散数学',   color:'#d97706'},
-  app:     {name:'应用与计算', color:'#0891b2'},
+  found:   {name:'基础层',     color:'#64748b'},
+  analysis:{name:'分析',       color:'#3b82f6'},
+  algebra: {name:'代数',       color:'#ef4444'},
+  geom:    {name:'几何与拓扑', color:'#10b981'},
+  prob:    {name:'概率与统计', color:'#8b5cf6'},
+  disc:    {name:'离散数学',   color:'#b45309'},
+  app:     {name:'应用与计算', color:'#06b6d4'},
 };
 // 各层图标（节点名前缀，提升视觉辨识度）
 const LAYER_ICON = {found:'📐', analysis:'∑', algebra:'𝑥', geom:'△', prob:'🎲', disc:'◊', app:'⚙'};
