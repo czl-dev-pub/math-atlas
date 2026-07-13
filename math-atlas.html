@@ -919,84 +919,107 @@ function diagPickGoal(radio){
   radio.parentElement.classList.add('active');
 }
 
+/* ---- 诊断核心算法：BFS回溯前置，生成完整学习计划 ---- */
+function getGoalLearningPlan(goalKey){
+  const steps = PATHS[goalKey].steps;
+  const queue = steps.map(s=>s.id);
+  const needed = new Set();
+  const visited = new Set();
+  while(queue.length){
+    const id = queue.shift();
+    if(visited.has(id) || mastered.has(id)) continue;
+    visited.add(id); needed.add(id);
+    (NODES[id].prereq||[]).forEach(p=>{ if(!visited.has(p) && !mastered.has(p)) queue.push(p); });
+  }
+  // Kahn 分层：每次取所有前置已不在 remaining 中的节点
+  const plan = [];
+  let remaining = new Set(needed);
+  let level = 0;
+  while(remaining.size > 0){
+    const cur = [];
+    remaining.forEach(id=>{
+      if(((NODES[id].prereq||[]).filter(p=>remaining.has(p)).length) === 0) cur.push(id);
+    });
+    if(cur.length === 0){ remaining.forEach(id=>cur.push(id)); remaining.clear(); }
+    else cur.forEach(id=>remaining.delete(id));
+    cur.sort((a,b)=>{ const da=(NODES[a].prereq||[]).length; const db=(NODES[b].prereq||[]).length; return db-da; });
+    cur.forEach(id=> plan.push({level, id, name: NODES[id].name, layer: NODES[id].layer }));
+    level++;
+  }
+  return plan;
+}
+
 function diagGenerate(){
-  // 1. 收集勾选的技能 → 标记 mastered
   let newlyMarked=[];
   document.querySelectorAll('#diag-skills .diag-skill.active').forEach(el=>{
     const id=el.dataset.skill;
     if(!mastered.has(id)){ mastered.add(id); saveMastered(); newlyMarked.push(id); }
   });
-  // 2. 推荐起点：
-  //    若选了目标 → 沿该目标路径找第一个未掌握节点（真正的"下一步"）
-  //    若没选目标 → 全图找第一个"未掌握但前置全满足"的节点
-  let recommendation=null, blockedBy=null, recommendPath=diagGoal;
-  if(diagGoal && PATHS[diagGoal]){
-    const steps=PATHS[diagGoal].steps;
-    const gap = steps.find(s=>!mastered.has(s.id));
-    if(gap){ recommendation=gap.id; }
-    else { recommendPath=null; }  // 路径全掌握，走全局推荐
-  }
-  if(!recommendation){
-    recommendPath=null;  // 全局推荐时不绑路径
-    for(const id in NODES){
-      if(mastered.has(id)) continue;
-      const prereqs=NODES[id].prereq||[];
-      if(prereqs.length===0){ recommendation=id; break; }
-      if(prereqs.every(p=>mastered.has(p))){ recommendation=id; break; }
-    }
-    if(!recommendation){
-      let minBlock=999;
-      for(const id in NODES){
-        if(mastered.has(id)) continue;
-        const missing=(NODES[id].prereq||[]).filter(p=>!mastered.has(p)).length;
-        if(missing<minBlock && missing>0){ minBlock=missing; recommendation=id; blockedBy=(NODES[id].prereq||[]).filter(p=>!mastered.has(p)); }
-      }
-    }
-  }
-  // 3. 生成报告
   const masteredCount=mastered.size;
   const totalNodes=Object.keys(NODES).length;
-  const masteryPct=Math.round(masteredCount/totalNodes*100);
   const bgLabel={middle:'初中',high:'高中学过',eng:'大学工科',sci:'大学理科',math:'数学专业'}[diagBg]||'未选择';
   const goalLabel = diagGoal&&PATHS[diagGoal] ? PATHS[diagGoal].name : '未选择';
-  // 路径进度
-  let pathProgressHtml='';
+  let planHtml = '', firstGapId = null;
+
   if(diagGoal && PATHS[diagGoal]){
-    const steps=PATHS[diagGoal].steps;
-    const done=steps.filter(s=>mastered.has(s.id)).length;
-    pathProgressHtml='<p>🛤️ 目标 <b>'+PATHS[diagGoal].name+'</b>：'+done+'/'+steps.length+' 节点已掌握</p>';
+    const plan = getGoalLearningPlan(diagGoal);
+    if(plan.length === 0){
+      planHtml = '<div style="background:#0f172a;border-radius:8px;padding:16px;font-size:13px;margin-top:12px;line-height:1.8">';
+      planHtml += '<p style="color:#22c55e">✅ 目标「'+goalLabel+'」的所有前置已就绪！可以直接开始学习。</p></div>';
+    } else {
+      firstGapId = plan[0].id;
+      const stepIds = PATHS[diagGoal].steps.map(s=>s.id);
+      const doneSteps = stepIds.filter(id=>mastered.has(id)).length;
+      planHtml = '<div style="background:#0f172a;border-radius:8px;padding:16px;font-size:13px;margin-top:12px;line-height:1.8">';
+      planHtml += '<div style="color:var(--accent);font-weight:600;margin-bottom:8px">📊 诊断报告</div>';
+      planHtml += '<p style="color:var(--txt-dim)">背景：'+bgLabel+'　目标：'+goalLabel+'</p>';
+      planHtml += '<p>📈 掌握：<b>'+masteredCount+'/'+totalNodes+'</b> 节点　🛤️ 目标：<b>'+doneSteps+'/'+stepIds.length+'</b> 步</p>';
+      if(newlyMarked.length) planHtml += '<p style="color:#22c55e">✅ 新标记 '+newlyMarked.length+' 个</p>';
+      planHtml += '<p style="margin-top:10px;color:var(--txt-dim)">🧩 发现 <b>'+plan.length+'</b> 个缺口，按顺序补完：</p>';
+      planHtml += '<div style="margin-top:8px;border-left:2.5px solid var(--accent);padding-left:14px">';
+      let cl = -1;
+      plan.forEach((item,i)=>{
+        const lc = LAYERS[item.layer]?.color||'#6b7280';
+        if(item.level !== cl){ planHtml += '<div style="font-size:11px;color:var(--txt-dim);margin:10px 0 4px;font-weight:600">📖 第'+(item.level+1)+'层（基础→深入）</div>'; cl=item.level; }
+        planHtml += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0">';
+        planHtml += '<span style="width:8px;height:8px;border-radius:50%;background:'+lc+';flex-shrink:0"></span>';
+        if(mastered.has(item.id)) planHtml += '<span style="color:#22c55e">✓</span><span style="color:var(--txt-dim)">'+item.name+'</span>';
+        else planHtml += '<a onclick="diagStart(\''+item.id+'\',\''+diagGoal+'\')" style="color:'+(i===0?'#fbbf24':lc)+';cursor:pointer;text-decoration:'+(i===0?'underline':'none')+';font-weight:'+(i===0?'600':'400')+'">'+item.name+'</a>'+(i===0?' <span style="background:#fbbf24;color:#0b1220;font-size:10px;padding:1px 6px;border-radius:4px;font-weight:600">起点</span>':'');
+        planHtml += '</div>';
+      });
+      planHtml += '</div>';
+      planHtml += '<button onclick="diagStart(\''+firstGapId+'\',\''+diagGoal+'\')" style="width:100%;margin-top:14px;padding:11px;border-radius:8px;border:none;background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#0b1220;font-size:14px;font-weight:700;cursor:pointer">🎯 从「'+NODES[firstGapId].name+'」开始学</button>';
+      planHtml += '<div style="margin-top:10px"><button onclick="diagDownloadReport()" style="background:transparent;border:1px solid var(--panel2);color:var(--txt-dim);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px">📄 下载完整报告</button></div>';
+      planHtml += '</div>';
+    }
+  } else {
+    let rec=null, blocked=null;
+    for(const id in NODES){
+      if(mastered.has(id)) continue;
+      const p=NODES[id].prereq||[];
+      if(p.length===0||p.every(x=>mastered.has(x))){ rec=id; break; }
+    }
+    if(!rec){
+      let min=999;
+      for(const id in NODES){
+        if(mastered.has(id)) continue;
+        const m=(NODES[id].prereq||[]).filter(p=>!mastered.has(p));
+        if(m.length<min&&m.length>0){ min=m.length; rec=id; blocked=m; }
+      }
+    }
+    planHtml = '<div style="background:#0f172a;border-radius:8px;padding:16px;font-size:13px;margin-top:12px;line-height:1.8">';
+    planHtml += '<div style="color:var(--accent);font-weight:600;margin-bottom:8px">📊 诊断报告</div>';
+    planHtml += '<p style="color:var(--txt-dim)">背景：'+bgLabel+'</p><p>📈 掌握：<b>'+masteredCount+'/'+totalNodes+'</b></p>';
+    if(newlyMarked.length) planHtml += '<p style="color:#22c55e">✅ 新标记 '+newlyMarked.length+' 个</p>';
+    if(rec) planHtml += '<p>🎯 建议：<a onclick="diagStart(\''+rec+'\')" style="color:var(--accent);cursor:pointer;text-decoration:underline">'+NODES[rec].name+'</a></p>'+(blocked?'<p style="color:var(--txt-dim)">需先补：'+blocked.map(id=>NODES[id].name).join('、')+'</p>':'');
+    planHtml += '<div style="margin-top:10px"><button onclick="diagDownloadReport()" style="background:transparent;border:1px solid var(--panel2);color:var(--txt-dim);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px">📄 下载报告</button></div>';
+    planHtml += '</div>';
   }
-  let html='<div style="background:#0f172a;border-radius:8px;padding:16px;font-size:13px;line-height:1.8">';
-  html+='<div style="color:var(--accent);font-weight:600;margin-bottom:8px">📊 你的诊断报告</div>';
-  html+='<p style="color:var(--txt-dim)">背景：'+bgLabel+'　|　目标：'+goalLabel+'</p>';
-  if(newlyMarked.length){ html+='<p>✅ 已标记 <b>'+newlyMarked.length+'</b> 个新掌握：'+newlyMarked.map(id=>NODES[id].name).join('、')+'</p>'; }
-  html+='<p>📈 当前掌握：<b>'+masteredCount+' / '+totalNodes+'</b> 节点（'+masteryPct+'%）</p>';
-  html+=pathProgressHtml;
-  if(recommendation){
-    html+='<p>🎯 <b>建议下一步</b>：学习 <a onclick="diagStart(\''+recommendation+'\'';
-    if(recommendPath) html += ',\''+recommendPath+'\'';
-    html += ')" style="color:var(--accent);cursor:pointer;text-decoration:underline">'+NODES[recommendation].name+'</a>';
-    if(blockedBy){ html+='<br><span style="color:var(--txt-dim)">（需先补：'+blockedBy.map(id=>NODES[id].name).join('、')+'）</span>'; }
-    if(recommendPath) html+='<br><span style="color:var(--txt-dim)">（沿「'+PATHS[recommendPath].name+'」路线）</span>';
-    html+='</p>';
-  }
-  html+='<p style="margin-top:12px"><button onclick="diagDownloadReport()" style="background:var(--panel2);border:1px solid var(--accent);color:var(--accent);padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px">📄 下载诊断报告</button></p>';
-  html+='</div>';
   const r=document.getElementById('diag-result');
-  r.innerHTML=html; r.style.display='block';
-  // 保存报告数据供下载
-  _diagLastReport = { date:new Date().toISOString(), background:bgLabel, goal:goalLabel, masteredCount, totalNodes, masteryPct, newlyMarked:newlyMarked.map(id=>NODES[id].name), recommendation: recommendation?NODES[recommendation].name:null, recommendationPath: recommendPath?PATHS[recommendPath].name:null, blockedBy: blockedBy?blockedBy.map(id=>NODES[id].name):null };
-  // 刷新图谱（更新掌握状态着色 + 节点颜色）
+  r.innerHTML=planHtml; r.style.display='block';
   updateProgress();
-  if(typeof cy!=='undefined'&&cy.nodes){cy.nodes().forEach(node=>{ node.data('status', nodeStatus(node.id())); });}
-  // 自动聚焦推荐起点
-  if(recommendation){
-    setTimeout(()=>{
-      closeDiagnostic();
-      if(recommendPath){ currentPath=recommendPath; }
-      focusNode(recommendation);
-    }, 600);
-  }
+  if(typeof cy!=='undefined'&&cy.nodes) cy.nodes().forEach(n=>{ n.data('status',nodeStatus(n.id())); });
+  _diagLastReport = { date:new Date().toISOString(), background:bgLabel, goal:goalLabel, masteredCount, totalNodes, newlyMarked:newlyMarked.map(id=>NODES[id].name), plan: firstGapId?getGoalLearningPlan(diagGoal).map(p=>({id:p.id,name:p.name,level:p.level,mastered:mastered.has(p.id)})):null, firstGapId, goalKey:diagGoal };
 }
 // 点击报告里"建议下一步"链接：关闭诊断+聚焦（带路径上下文）
 function diagStart(nodeId, pathId){
@@ -1004,24 +1027,27 @@ function diagStart(nodeId, pathId){
   if(pathId){ currentPath=pathId; }
   focusNode(nodeId);
 }
-// 下载真正的诊断报告（文本，非进度备份JSON）
+// 下载诊断报告（含完整学习计划）
 function diagDownloadReport(){
-  if(!_diagLastReport){ return; }
+  if(!_diagLastReport) return;
   const r=_diagLastReport;
   let txt='数学导航地图 · 学习诊断报告\n';
   txt+='生成时间：'+new Date(r.date).toLocaleString('zh-CN')+'\n';
   txt+='========================================\n\n';
   txt+='数学背景：'+r.background+'\n';
   txt+='学习目标：'+r.goal+'\n\n';
-  txt+='掌握情况：'+r.masteredCount+' / '+r.totalNodes+' 节点（'+r.masteryPct+'%）\n';
-  if(r.newlyMarked&&r.newlyMarked.length){ txt+='本次新标记：'+r.newlyMarked.join('、')+'\n'; }
-  txt+='\n';
-  if(r.recommendation){
-    txt+='建议下一步：'+r.recommendation+'\n';
-    if(r.recommendationPath){ txt+='（沿「'+r.recommendationPath+'」路线）\n'; }
-    if(r.blockedBy){ txt+='需先补：'+r.blockedBy.join('、')+'\n'; }
+  txt+='掌握情况：'+r.masteredCount+' / '+r.totalNodes+' 节点\n';
+  if(r.newlyMarked&&r.newlyMarked.length) txt+='本次新标记：'+r.newlyMarked.join('、')+'\n';
+  if(r.plan && r.plan.length){
+    txt+='\n--- 完整学习计划（按顺序） ---\n';
+    let cl=-1;
+    r.plan.forEach(p=>{
+      if(p.level!==cl){ txt+='\n【第'+(p.level+1)+'层】\n'; cl=p.level; }
+      txt+='  '+(p.mastered?'✓ ':'  ')+p.name+'\n';
+    });
+    txt+='\n🎯 推荐起点：'+r.plan.find(x=>!x.mastered)?.name+'\n';
   }
-  txt+='\n注：进度备份（含已掌握节点列表）请用页面右上角 ⬇ 按钮导出。';
+  txt+='\n---\n由 math-atlas 生成';
   const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
