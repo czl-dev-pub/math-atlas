@@ -16,18 +16,18 @@
 const fs = require('fs');
 const path = require('path');
 
-const HTML = path.join(__dirname, '..', 'math-atlas.html');
+const HTML = path.join(__dirname, '..', 'data/nodes.js');
 const src = fs.readFileSync(HTML, 'utf8');
 const lines = src.split('\n');
 
-// 找 NODES 块边界：const NODES = { ... };
+// 找 NODES 块边界（从 data/nodes.js，直接是 const NODES = {...}）
 let start = -1, end = -1;
 for (let i = 0; i < lines.length; i++) {
   if (/const NODES\s*=/.test(lines[i])) start = i;
   if (start >= 0 && /^\s*\};\s*$/.test(lines[i])) { end = i; break; }
 }
 if (start < 0 || end < 0) {
-  console.error('✗ 找不到 NODES 块');
+  console.error('✗ 找不到 NODES 块（从 data/nodes.js）');
   process.exit(1);
 }
 
