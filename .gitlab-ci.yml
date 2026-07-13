@@ -8,7 +8,7 @@
 #   - 推送者/评审者无需翻 job 日志或 dashboard，结果自动出现在 GitLab 页面。
 #
 # 需配置 CI/CD 变量（Settings → CI/CD → Variables）：
-#   SONAR_HOST_URL     = https://sonarqube.redcoast.dpdns.org
+#   SONAR_HOST_URL     = （你的 SonarQube 实例地址）
 #   SONAR_TOKEN        = （SonarQube 扫描 token）
 #   GITLAB_WRITE_TOKEN = （有 api scope 的 GitLab token，用于写回 commit/MR note）
 #   SONAR_PROJECT_KEY  = math-atlas（默认 CI_PROJECT_NAME，如项目在 SonarQube 用别的 key 则覆盖）
