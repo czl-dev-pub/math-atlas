@@ -180,14 +180,14 @@ var ts=function(){function e(e){return-e.tension*e.x-e.friction*e.v}function t(t
     </div>
     <button class="tab" id="layout-btn" onclick="toggleLayout()" style="margin-left:4px" title="切换布局">📊 分层布局</button>
   </header>
-  <main>
-    <aside id="sidebar"></aside>
-    <div id="starred-panel" class="starred-panel">
-      <div class="starred-head">⭐ 我的收藏 <span class="starred-hint">右键节点收藏</span></div>
-      <div id="starred-list" class="starred-list"></div>
-    </div>
-    <div id="cy-wrap">
-      <div id="cy"></div>
+	  <main>
+	    <aside id="sidebar"></aside>
+	    <div id="cy-wrap">
+	      <div id="starred-panel" class="starred-panel">
+	        <div class="starred-head">⭐ 我的收藏 <span class="starred-hint">右键节点收藏</span></div>
+	        <div id="starred-list" class="starred-list"></div>
+	      </div>
+	      <div id="cy"></div>
       <div class="hint" id="hint">点击任意节点查看详情 · 滚轮缩放 · 拖拽平移</div>
       <div id="focusbar" class="focusbar"></div>
       <div class="legend">
@@ -2723,50 +2723,46 @@ function initCytoscape(){
     container: document.getElementById('cy'),
     elements: buildElements(),
     style: [
-	      // ======= 节点视觉系统 v2：暗色卡片 + 彩色边框 + 微阴影（代替彩色填充块） =======
-	      // 基础节点：近黑色卡片配层色粗边框，白色文字在高对比暗底上清晰可读
+	      // ======= 节点样式：干净功能型 =======
+	      // 基础节点：深色底保留层色透感，亮边框与暗背景拉开分离度
 	      {selector:'node', style:{'label':'data(label)','text-valign':'center','text-halign':'center',
-	        'background-color':'data(color)','background-blacken':0.82,
-	        'color':'#f1f5f9','font-size':'13px','min-zoomed-font-size':'2px',
-	        'text-outline-width':1,'text-outline-color':'rgba(0,0,0,.45)',
-	        'width':'label','height':'label','padding':'14px',
+	        'background-color':'data(color)','background-blacken':0.2,
+	        'color':'#fff','font-size':'13px','min-zoomed-font-size':'2px',
+	        'width':'label','height':'label','padding':'12px',
 	        'shape':'round-rectangle','text-wrap':'wrap','text-max-width':'100px',
-	        'border-width':'2.5px','border-color':'data(color)',
-	        'shadow-blur':8,'shadow-color':'rgba(0,0,0,.45)','shadow-offset-y':3,'shadow-opacity':1,
+	        'border-width':'1.5px','border-color':'rgba(255,255,255,.35)',
 	        'opacity':0.9,
-	        'transition-property':'opacity,border-color,border-width,background-blacken,shadow-blur',
+	        'transition-property':'opacity,border-color,border-width,background-blacken',
 	        'transition-duration':'.2s'}},
-	      // 推荐（前置已满足）：金框 + 略亮
-	      {selector:'node[status="recommended"]', style:{'opacity':1,'border-color':'#fbbf24','border-width':'3px','font-weight':'600','background-blacken':0.68}},
-	      // 进行中（pending）：半透明
+	      // 推荐：金框
+	      {selector:'node[status="recommended"]', style:{'opacity':1,'border-color':'#fbbf24','border-width':'2.5px','font-weight':'600','background-blacken':0.08}},
+	      // 进行中：半透明
 	      {selector:'node[status="pending"]', style:{'opacity':0.55}},
 	      // 已掌握：绿框
-	      {selector:'node[status="mastered"]', style:{'opacity':1,'border-color':'#22c55e','border-width':'3px','background-blacken':0.68}},
-	      // 聚焦态：白框 + 提亮 + 阴影突起
-	      {selector:'.focused', style:{'border-color':'#ffffff','border-width':'4px','opacity':1,'background-blacken':0.5,'font-size':'14px','padding':'16px','shadow-blur':16,'shadow-color':'rgba(255,255,255,.12)','z-index':99}},
-	      {selector:'.prereq-node', style:{'border-color':'#22d3ee','border-width':'2.5px','opacity':0.95,'background-blacken':0.68}},
-	      {selector:'.next-node', style:{'border-color':'#fb923c','border-width':'2.5px','opacity':0.95,'background-blacken':0.68}},
+	      {selector:'node[status="mastered"]', style:{'opacity':1,'border-color':'#22c55e','border-width':'2.5px','background-blacken':0.08}},
+	      // 聚焦态：白框提亮
+	      {selector:'.focused', style:{'border-color':'#ffffff','border-width':'3.5px','opacity':1,'background-blacken':0,'font-size':'14px','padding':'14px','z-index':99}},
+	      {selector:'.prereq-node', style:{'border-color':'#22d3ee','border-width':'2.5px','opacity':0.95,'background-blacken':0.08}},
+	      {selector:'.next-node', style:{'border-color':'#fb923c','border-width':'2.5px','opacity':0.95,'background-blacken':0.08}},
 	      {selector:'.dim', style:{'opacity':.08}},
-	      {selector:'.path-gap', style:{'border-color':'#f97316','border-width':'4px','opacity':1,'background-blacken':0.6}},
-	      {selector:'.path-done', style:{'border-color':'#22c55e','border-width':'3px','opacity':1,'background-blacken':0.68}},
-	      // 路径终点：金框 + 提亮 + 字重
-	      {selector:'.path-end', style:{'border-color':'#fbbf24','border-width':'4px','opacity':1,'font-weight':'700','background-blacken':0.45,'z-index':99,'shadow-blur':14,'shadow-color':'rgba(251,191,36,.15)'}},
-	      // 边：干净灰色，不抢戏
+	      {selector:'.path-gap', style:{'border-color':'#f97316','border-width':'3.5px','opacity':1,'background-blacken':0.08}},
+	      {selector:'.path-done', style:{'border-color':'#22c55e','border-width':'3px','opacity':1,'background-blacken':0.08}},
+	      {selector:'.path-end', style:{'border-color':'#fbbf24','border-width':'4px','opacity':1,'font-weight':'700','background-blacken':0,'z-index':99}},
+	      // 边：干净灰色
 	      {selector:'edge', style:{'width':1.2,'line-color':'#64748b','target-arrow-color':'#64748b','target-arrow-shape':'triangle','arrow-scale':.75,'curve-style':'bezier','opacity':.5}},
 	      {selector:'.path-edge', style:{'line-color':'#f97316','target-arrow-color':'#f97316','opacity':.95,'width':3}},
 	      {selector:'.link-edge', style:{'line-color':'#94a3b8','target-arrow-color':'#94a3b8','opacity':.65,'width':2}},
-	      // 前置边（青）/后续边（橙）：在聚焦中才显色
 	      {selector:'.prereq-edge', style:{'line-color':'#22d3ee','target-arrow-color':'#22d3ee','opacity':.95,'width':3}},
 	      {selector:'.next-edge', style:{'line-color':'#fb923c','target-arrow-color':'#fb923c','opacity':.95,'width':3}},
-	      {selector:'.path-ctx', style:{'border-color':'#e879f9','border-width':'2px','opacity':0.95,'border-style':'dashed','background-blacken':0.68}},
-	      // 鱼眼悬停：提亮 + 放大
-	      {selector:'.fish-big', style:{'padding':'18px','font-size':'13px','opacity':1,'z-index':99,'background-blacken':0.5}},
+	      {selector:'.path-ctx', style:{'border-color':'#e879f9','border-width':'2px','opacity':0.95,'border-style':'dashed','background-blacken':0.08}},
+	      // 鱼眼悬停
+	      {selector:'.fish-big', style:{'padding':'16px','font-size':'13px','opacity':1,'z-index':99,'background-blacken':0}},
 	      {selector:'.fish-mid', style:{'opacity':0.85}},
-	      // 收藏：金色双线框
-	      {selector:'.starred', style:{'border-color':'#fbbf24','border-style':'double','border-width':'5px'}},
+	      // 收藏
+	      {selector:'.starred', style:{'border-color':'#fbbf24','border-style':'double','border-width':'4px'}},
 	      // 手动定位
 	      {selector:'.pinned', style:{}},
-	      // 质量等级 A：文字后加金色极淡底板
+	      // 质量等级 A
 	      {selector:'node[qa="A"]', style:{'text-background-color':'rgba(251,191,36,.12)','text-background-opacity':1,'text-background-padding':'2px','text-background-shape':'round-rectangle'}},
     ],
     layout: {name:'null'}  // 初始无布局，下面用 layoutLayered 定位
