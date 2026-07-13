@@ -257,37 +257,37 @@ function initCytoscape(){
 	      // ======= 节点样式：干净功能型 =======
 	      // 基础节点：深色底保留层色透感，亮边框与暗背景拉开分离度
 	      {selector:'node', style:{'label':'data(label)','text-valign':'center','text-halign':'center',
-	        'background-color':'data(color)','background-blacken':0.2,
+	        'background-color':'data(color)','background-blacken':0.12,
 	        'color':'#fff','font-size':'13px','min-zoomed-font-size':'2px',
-	        'width':'label','height':'label','padding':'12px',
-	        'shape':'round-rectangle','text-wrap':'wrap','text-max-width':'100px',
+		        'width':170,'height':'label','padding':'12px',
+		        'shape':'round-rectangle','text-wrap':'wrap','text-max-width':'146px',
 	        'border-width':'1.5px','border-color':'rgba(255,255,255,.35)',
 	        'opacity':0.9,
 	        'transition-property':'opacity,border-color,border-width,background-blacken',
 	        'transition-duration':'.2s'}},
 	      // 推荐：金框
-	      {selector:'node[status="recommended"]', style:{'opacity':1,'border-color':'#fbbf24','border-width':'2.5px','font-weight':'600','background-blacken':0.08}},
+	      {selector:'node[status="recommended"]', style:{'opacity':1,'border-color':'#fbbf24','border-width':'2.5px','font-weight':'600','background-blacken':0.05}},
 	      // 进行中：半透明
-	      {selector:'node[status="pending"]', style:{'opacity':0.55}},
+	      {selector:'node[status="pending"]', style:{'opacity':0.65}},
 	      // 已掌握：绿框
-	      {selector:'node[status="mastered"]', style:{'opacity':1,'border-color':'#22c55e','border-width':'2.5px','background-blacken':0.08}},
+	      {selector:'node[status="mastered"]', style:{'opacity':1,'border-color':'#22c55e','border-width':'2.5px','background-blacken':0.03}},
 	      // 聚焦态：白框提亮
-	      {selector:'.focused', style:{'border-color':'#ffffff','border-width':'3.5px','opacity':1,'background-blacken':0,'font-size':'14px','padding':'14px','z-index':99}},
-	      {selector:'.prereq-node', style:{'border-color':'#22d3ee','border-width':'2.5px','opacity':0.95,'background-blacken':0.08}},
-	      {selector:'.next-node', style:{'border-color':'#fb923c','border-width':'2.5px','opacity':0.95,'background-blacken':0.08}},
+	      {selector:'.focused', style:{'border-color':'#ffffff','border-width':'3.5px','opacity':1,'background-blacken':-0.05,'font-size':'14px','padding':'14px','z-index':99}},
+	      {selector:'.prereq-node', style:{'border-color':'#22d3ee','border-width':'2.5px','opacity':0.95,'background-blacken':0.05}},
+	      {selector:'.next-node', style:{'border-color':'#fb923c','border-width':'2.5px','opacity':0.95,'background-blacken':0.05}},
 	      {selector:'.dim', style:{'opacity':.08}},
-	      {selector:'.path-gap', style:{'border-color':'#f97316','border-width':'3.5px','opacity':1,'background-blacken':0.08}},
-	      {selector:'.path-done', style:{'border-color':'#22c55e','border-width':'3px','opacity':1,'background-blacken':0.08}},
-	      {selector:'.path-end', style:{'border-color':'#fbbf24','border-width':'4px','opacity':1,'font-weight':'700','background-blacken':0,'z-index':99}},
+	      {selector:'.path-gap', style:{'border-color':'#f97316','border-width':'3.5px','opacity':1,'background-blacken':0.05}},
+	      {selector:'.path-done', style:{'border-color':'#22c55e','border-width':'3px','opacity':1,'background-blacken':0.03}},
+	      {selector:'.path-end', style:{'border-color':'#fbbf24','border-width':'4px','opacity':1,'font-weight':'700','background-blacken':-0.05,'z-index':99}},
 	      // 边：干净灰色
 	      {selector:'edge', style:{'width':1.2,'line-color':'#64748b','target-arrow-color':'#64748b','target-arrow-shape':'triangle','arrow-scale':.75,'curve-style':'bezier','opacity':.5}},
 	      {selector:'.path-edge', style:{'line-color':'#f97316','target-arrow-color':'#f97316','opacity':.95,'width':3}},
 	      {selector:'.link-edge', style:{'line-color':'#94a3b8','target-arrow-color':'#94a3b8','opacity':.65,'width':2}},
 	      {selector:'.prereq-edge', style:{'line-color':'#22d3ee','target-arrow-color':'#22d3ee','opacity':.95,'width':3}},
 	      {selector:'.next-edge', style:{'line-color':'#fb923c','target-arrow-color':'#fb923c','opacity':.95,'width':3}},
-	      {selector:'.path-ctx', style:{'border-color':'#e879f9','border-width':'2px','opacity':0.95,'border-style':'dashed','background-blacken':0.08}},
+	      {selector:'.path-ctx', style:{'border-color':'#e879f9','border-width':'2px','opacity':0.95,'border-style':'dashed','background-blacken':0.05}},
 	      // 鱼眼悬停
-	      {selector:'.fish-big', style:{'padding':'16px','font-size':'13px','opacity':1,'z-index':99,'background-blacken':0}},
+	      {selector:'.fish-big', style:{'padding':'16px','font-size':'13px','opacity':1,'z-index':99,'background-blacken':-0.05}},
 	      {selector:'.fish-mid', style:{'opacity':0.85}},
 	      // 收藏
 	      {selector:'.starred', style:{'border-color':'#fbbf24','border-style':'double','border-width':'4px'}},
@@ -313,12 +313,13 @@ const LAYOUT_COSE = {name:'cose', animate:false, nodeRepulsion:12000, idealEdgeL
 function layoutLayered(){
   // 按 layer 分行：每个 layer 一行（节点多时自动换行），节点在该行内排开
   const cy_ = cy;
+  cy.resize();  // 强制重新测量 canvas 尺寸（初始化时布局未稳定导致 cy.width() 偏小）
   const nodes = cy_.nodes();
   const byLayer = {};
   nodes.forEach(n=>{ const l=n.data('layer'); (byLayer[l]=byLayer[l]||[]).push(n); });
-  const rowH = 155;       // 层间距
-  const colW = 165;       // 固定列宽
-  const maxPerRow = 10;   // 每行最多节点数，超过则换行
+  const rowH = 135;       // 层间距（收缩让zoom更高，文字更大）
+  const colW = 195;       // 固定列宽
+  const maxPerRow = 10;   // 每行最多节点数
   const fixedRowW = maxPerRow * colW; // 所有行统一宽度，保证左右边沿对齐
   nodes.positions(()=>({x:0,y:0})); // reset
   let maxY = 0;
@@ -423,8 +424,8 @@ function bindInteractions(){
   }, 600);
 }
 /* ---- 统一的 fit 辅助：先 resize 同步画布尺寸，再 fit ---- */
-const FIT_PADDING_FOCUS = 60;   // 聚焦子图时的边距
-const FIT_PADDING_OVERVIEW = 25; // 全景/路径总览时的边距（收紧让节点更大、文字更可读）
+const FIT_PADDING_FOCUS = 55;   // 聚焦子图时的边距
+const FIT_PADDING_OVERVIEW = 15; // 全景/路径总览时的边距（收紧让zoom更高）
 function refit(eles, padding, duration){
   if(typeof cy === 'undefined' || !cy || !cy.nodes) return;
   cy.resize();
