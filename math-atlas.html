@@ -2724,7 +2724,7 @@ function initCytoscape(){
     elements: buildElements(),
     style: [
       // 基础节点样式：饱满色彩 + 文字描边提升可读性 + 较亮边框增加节点与背景的分离感
-      {selector:'node', style:{'label':'data(label)','text-valign':'center','text-halign':'center','background-color':'data(color)','color':'#fff','font-size':'12px','min-zoomed-font-size':'2px','text-outline-width':2,'text-outline-color':'rgba(0,0,0,.35)','width':'label','height':'label','padding':'12px','shape':'round-rectangle','text-wrap':'wrap','text-max-width':'100px','border-width':'1.5px','border-color':'rgba(255,255,255,.5)','opacity':0.88,'transition-property':'opacity, border-color, border-width, font-size, padding','transition-duration':'.25s'}},
+      {selector:'node', style:{'label':'data(label)','text-valign':'center','text-halign':'center','background-color':'data(color)','color':'#fff','font-size':'13px','min-zoomed-font-size':'2px','text-outline-width':1,'text-outline-color':'rgba(0,0,0,.45)','width':'label','height':'label','padding':'12px','shape':'round-rectangle','text-wrap':'wrap','text-max-width':'100px','border-width':'1.5px','border-color':'rgba(255,255,255,.5)','opacity':0.88,'transition-property':'opacity, border-color, border-width','transition-duration':'.2s'}},
       // 推荐（前置已满足）：金色边框 + 字重加粗
       {selector:'node[status="recommended"]', style:{'opacity':1,'border-color':'#fbbf24','border-width':'2.5px','font-weight':'600'}},
       // 进行中（pending 但有前置未满足）：稍暗但仍可读
@@ -2772,35 +2772,34 @@ function initCytoscape(){
 
 /* 布局定义 */
 const LAYER_ORDER = ['found','analysis','algebra','geom','prob','disc','app'];
-const LAYOUT_COSE = {name:'cose', animate:false, nodeRepulsion:9000, idealEdgeLength:100, nodeOverlap:14, componentSpacing:80, padding:30, randomize:true, gravity:45, numIter:1500, fit:true};
+const LAYOUT_COSE = {name:'cose', animate:false, nodeRepulsion:12000, idealEdgeLength:120, nodeOverlap:10, componentSpacing:100, padding:30, randomize:false, gravity:30, numIter:2000, fit:true};
 function layoutLayered(){
   // 按 layer 分行：每个 layer 一行（节点多时自动换行），节点在该行内排开
   const cy_ = cy;
   const nodes = cy_.nodes();
   const byLayer = {};
   nodes.forEach(n=>{ const l=n.data('layer'); (byLayer[l]=byLayer[l]||[]).push(n); });
-  const rowH = 165;       // 层间距（配合更大的节点 padding）
-  const colW = 165;       // 固定列宽（配合更大的节点 padding/font-size）
+  const rowH = 155;       // 层间距
+  const colW = 165;       // 固定列宽
   const maxPerRow = 10;   // 每行最多节点数，超过则换行
+  const fixedRowW = maxPerRow * colW; // 所有行统一宽度，保证左右边沿对齐
   nodes.positions(()=>({x:0,y:0})); // reset
-  let maxRow = 0;
+  let maxY = 0;
   LAYER_ORDER.forEach((layer,layerIdx)=>{
     const arr = byLayer[layer]||[];
     if(!arr.length) return;
-    // 该层按 maxPerRow 换行
     const rows = Math.ceil(arr.length / maxPerRow);
     arr.forEach((n,i)=>{
       const subRow = Math.floor(i / maxPerRow);
       const subCol = i % maxPerRow;
-      const colsThisRow = Math.min(maxPerRow, arr.length - subRow*maxPerRow);
-      const rowW = colsThisRow * colW;
-      const x = -rowW/2 + subCol*colW + colW/2;
-      const y = -rowH*(LAYER_ORDER.length/2) + (layerIdx + subRow*0.6) * rowH;
+      const x = -fixedRowW/2 + subCol*colW + colW/2;
+      const y = -rowH*(LAYER_ORDER.length/2) + (layerIdx + subRow*0.55) * rowH;
       n.position({x, y});
     });
-    maxRow = Math.max(maxRow, layerIdx + rows*0.6);
+    maxY = Math.max(maxY, layerIdx + (rows-1)*0.55);
   });
-  refit(cy_.elements(), FIT_PADDING_OVERVIEW);
+  // 初始布局瞬间定位，不带动效
+  refit(cy_.elements(), FIT_PADDING_OVERVIEW, 0);
 }
 let currentLayout='cose';
 function toggleLayout(){
@@ -2840,10 +2839,13 @@ function bindInteractions(){
     fishTimer=setTimeout(()=>{ cy.nodes().removeClass('fish-big fish-mid'); }, 200);
   });
   // 单击：聚焦节点
-  cy.on('tap','node', e=>{
-    e.preventDefault();
-    focusNode(e.target.id());
-  });
+	  cy.on('tap','node', e=>{
+	    e.preventDefault();
+	    const nid = e.target.id();
+	    // 目标节点（星形）走 selectPath，不走 focusNode
+	    if(e.target.data('type')==='goal'){ selectPath(e.target.data('goalKey')); return; }
+	    focusNode(nid);
+	  });
   // 点空白退出聚焦
   cy.on('tap', e=>{ if(e.target===cy && focusedNode){ exitFocus(); } });
   // 双击：固定/解锁位置
@@ -2885,11 +2887,13 @@ function bindInteractions(){
 }
 /* ---- 统一的 fit 辅助：先 resize 同步画布尺寸，再 fit ---- */
 const FIT_PADDING_FOCUS = 60;   // 聚焦子图时的边距
-const FIT_PADDING_OVERVIEW = 35; // 全景/路径总览时的边距
-function refit(eles, padding){
+const FIT_PADDING_OVERVIEW = 25; // 全景/路径总览时的边距（收紧让节点更大、文字更可读）
+function refit(eles, padding, duration){
   if(typeof cy === 'undefined' || !cy || !cy.nodes) return;
-  cy.resize();  // 先同步 Cytoscape 内部画布像素尺寸到当前 #cy 的 CSS 尺寸
-  cy.animate({fit:{eles: eles || cy.elements(), padding: padding != null ? padding : FIT_PADDING_OVERVIEW}, duration: 400});
+  cy.resize();
+  const dur = (duration != null) ? duration : 400;
+  if(dur <= 0){ cy.fit(eles||cy.elements(), padding!=null?padding:FIT_PADDING_OVERVIEW); return; }
+  cy.animate({fit:{eles: eles||cy.elements(), padding: padding!=null?padding:FIT_PADDING_OVERVIEW}, duration: dur});
 }
 // 窗口缩放时防抖 resize
 let _resizeTimer = null;
@@ -2946,22 +2950,25 @@ function focusNode(id){
     else if(s===id && ctxNext.includes(t)) e.addClass('next-edge');
     else e.addClass('link-edge');
   });
-  const visible = cy.elements().filter(el=>!el.hasClass('dim'));
-  refit(visible, FIT_PADDING_FOCUS);
-  const goals = goalsUsing(id);
-  const status = nodeStatus(id);
-  const statusText = status==='mastered'?'<span style="color:#22c55e">✓ 已掌握</span>':status==='recommended'?'<span style="color:#fbbf24">★ 推荐学习</span>':'<span style="color:#94a3b8">前置未全掌握（仍可学）</span>';
-  document.getElementById('focusbar').classList.add('show');
-  document.getElementById('focusbar').innerHTML =
-    '<b>'+NODES[id].name+'</b>　'+statusText+
-    (prereqs.length? '　<span style="color:#22d3ee">青=前置</span>':'')+
-    (nexts.length? '　<span style="color:#fb923c">橙=后续</span>':'')+
-    (currentPath&&ctxPre.length+ctxNext.length? '　<span style="color:#e879f9">品红=目标路径上下文</span>':'')+
-    (goals.length? '<br>💡 学完能通往：'+goals.slice(0,4).join('、')+(goals.length>4?' 等':''):'')+
-    '　<button class="mini-btn" onclick="toggleGlobalView()">🌍 展开完整链</button>'+
-    '　<button class="mini-btn" onclick="exitFocus()">✕ 退出</button>';
-  showDetail(id);
-}
+	  showDetail(id);
+	  const goals = goalsUsing(id);
+	  const status = nodeStatus(id);
+	  const statusText = status==='mastered'?'<span style="color:#22c55e">✓ 已掌握</span>':status==='recommended'?'<span style="color:#fbbf24">★ 推荐学习</span>':'<span style="color:#94a3b8">前置未全掌握（仍可学）</span>';
+	  document.getElementById('focusbar').classList.add('show');
+	  document.getElementById('focusbar').innerHTML =
+	    '<b>'+NODES[id].name+'</b>　'+statusText+
+	    (prereqs.length? '　<span style="color:#22d3ee">青=前置</span>':'')+
+	    (nexts.length? '　<span style="color:#fb923c">橙=后续</span>':'')+
+	    (currentPath&&ctxPre.length+ctxNext.length? '　<span style="color:#e879f9">品红=目标路径上下文</span>':'')+
+	    (goals.length? '<br>💡 学完能通往：'+goals.slice(0,4).join('、')+(goals.length>4?' 等':''):'')+
+	    '　<button class="mini-btn" onclick="toggleGlobalView()">🌍 展开完整链</button>'+
+	    '　<button class="mini-btn" onclick="exitFocus()">✕ 退出</button>';
+	  // 等类过渡（200ms）+ 详情面板 flex 布局生效后，一次平滑缩放到子图（不再与过渡动效冲突）
+	  setTimeout(() => {
+	    const v = cy.elements().filter(el=>!el.hasClass('dim'));
+	    refit(v, FIT_PADDING_FOCUS);
+	  }, 320);
+	}
 
 function toggleGlobalView(){
   if(!focusedNode) return;
@@ -3083,8 +3090,8 @@ function setMode(mode){
     renderSearchSidebar(); sb.classList.add('show');
     document.getElementById('hint').innerHTML = '输入关键词搜索数学分支';
   }
-  // 侧边栏显隐改变画布宽度，延迟 resize+refit
-  setTimeout(()=>{ refit(cy.elements(), FIT_PADDING_OVERVIEW); }, 50);
+	  // 侧边栏显隐改变画布宽度，等 flex 布局生效后再 refit
+	  setTimeout(()=>{ refit(cy.elements(), FIT_PADDING_OVERVIEW); }, 120);
 }
 
 function renderGoalSidebar(){
@@ -3136,7 +3143,11 @@ function selectPath(pathId, srcEl){
   const p = PATHS[pathId];
   document.querySelectorAll('#sidebar .item').forEach(el=>el.classList.remove('active'));
   if(srcEl) srcEl.classList.add('active');
-  exitFocus();
+  // 手动清除聚焦/类状态，不调 exitFocus/closeDetail 以避免它们内部的 refit 与末尾的 refit 重叠
+  focusedNode=null; isGlobalView=false;
+  cy.elements().removeClass('dim focused prereq-node next-node path-ctx link-edge prereq-edge next-edge fish-big fish-mid');
+  document.getElementById('focusbar').classList.remove('show');
+  document.getElementById('detail').classList.remove('show');
   // 路径步骤节点 + 桥接节点（目标终点不再是独立节点，改为高亮路径的最后一步）
   const stepIds = p.steps.map(s=>s.id);
   const need = new Set(stepIds);          // 目标步骤节点（高亮）
@@ -3264,15 +3275,14 @@ function showDetail(id, pathId){
     '<div class="section"><h3>学到什么程度算够</h3>'+(depthHtml||'<p style="color:var(--txt-dim)">参考具体目标路线</p>')+'</div>'+
     '<div class="section"><h3>推荐资源</h3>'+resHtml+'</div>'+
     '<div class="section"><button class="big-btn '+(isM?'done':'')+'" onclick="toggleMastered(\''+id+'\')">'+(isM?'✓ 已掌握（点击取消）':'标记为已掌握')+'</button></div>';
-  document.getElementById('detail').classList.add('show');
-  // 详情面板展开后画布变窄，延迟让 flex 布局生效再 resize+refit
-  setTimeout(()=>{ if(focusedNode){ const vis=cy.elements().filter(el=>!el.hasClass('dim')); refit(vis, FIT_PADDING_FOCUS); } else { refit(cy.elements(), FIT_PADDING_OVERVIEW); } }, 50);
-}
-function closeDetail(){
-  document.getElementById('detail').classList.remove('show');
-  // 详情面板收起后画布变宽，延迟 resize+refit
-  setTimeout(()=>{ if(focusedNode){ const vis=cy.elements().filter(el=>!el.hasClass('dim')); refit(vis, FIT_PADDING_FOCUS); } else { refit(cy.elements(), FIT_PADDING_OVERVIEW); } }, 50);
-}
+	  document.getElementById('detail').classList.add('show');
+	  // 注：不在这里 refit——focusNode 中会在 320ms 后统一做一次 refit（等 flex 布局 + 类过渡都稳定）
+	}
+	function closeDetail(){
+	  document.getElementById('detail').classList.remove('show');
+	  // 详情面板收起后画布变宽，等 flex 布局生效后再 refit
+	  setTimeout(()=>{ if(focusedNode){ const vis=cy.elements().filter(el=>!el.hasClass('dim')); refit(vis, FIT_PADDING_FOCUS); } else { refit(cy.elements(), FIT_PADDING_OVERVIEW); } }, 120);
+	}
 function showError(msg){
   var box=document.createElement('div');
   box.style.cssText='display:flex;height:100%;align-items:center;justify-content:center;color:#f87171;font-size:13px;text-align:center;padding:20px;font-family:monospace;white-space:pre-wrap';
