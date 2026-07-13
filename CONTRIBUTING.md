@@ -4,10 +4,9 @@
 
 ## 怎么提建议
 
-本项目同时托管在 GitLab 和 GitHub，任一平台都可提 Issue。请**选择对应的模板**填写：
+请在 GitHub 上提 Issue，选择对应的模板填写：
 
-- **GitLab**：https://gitlab.redcoast.dpdns.org/learning/math-atlas/-/issues
-- **GitHub**：https://github.com/czl-dev-pub/math-atlas/issues
+- **GitHub Issues**：https://github.com/czl-dev-pub/math-atlas/issues
 
 | 类型 | 模板 | 适合 |
 |---|---|---|
