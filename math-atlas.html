@@ -307,7 +307,7 @@ function initCytoscape(){
 
 /* 布局定义 */
 const LAYER_ORDER = ['found','analysis','algebra','geom','prob','disc','app'];
-const LAYOUT_COSE = {name:'cose', animate:false, nodeRepulsion:12000, idealEdgeLength:120, nodeOverlap:10, componentSpacing:100, padding:30, randomize:false, gravity:30, numIter:2000, fit:true};
+const LAYOUT_COSE = {name:'cose', animate:false, nodeRepulsion:25000, idealEdgeLength:200, nodeOverlap:5, componentSpacing:150, padding:30, randomize:true, gravity:15, numIter:3000, fit:true};
 function layoutLayered(){
   // 按 layer 分行：每个 layer 一行（节点多时自动换行），节点在该行内排开
   const cy_ = cy;
